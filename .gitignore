@@ -1,0 +1,7 @@
+/vendor/
+/kirby/
+/composer.lock
+.DS_Store
+/node_modules/
+/test-results/
+/playwright-report/

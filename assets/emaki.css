@@ -1,0 +1,111 @@
+/* Emaki — stylesheet of the viewer's <dialog>. Rules for .emaki and its
+   parts only: nothing for .emaki-gallery or .emaki-item.
+   The site sets three tokens on any ancestor of the dialog (usually :root):
+   --emaki-bg (backdrop), --emaki-fg (text and buttons), --emaki-accent (the
+   focus ring of the buttons and the current counter, nothing else). The four
+   derived tokens below read --emaki-muted, --emaki-border, --emaki-radius and
+   --emaki-font when they are set, so markup never has to change. */
+.emaki {
+  --_bg: var(--emaki-bg, rgb(12 16 20 / 0.88));
+  --_fg: var(--emaki-fg, #f4f5f3);
+  --_accent: var(--emaki-accent, #ffffff);
+  /* derived, so four more tokens can be added later without touching markup: */
+  --_muted: var(--emaki-muted, color-mix(in srgb, var(--_fg) 70%, transparent));
+  --_border: var(--emaki-border, color-mix(in srgb, var(--_fg) 35%, transparent));
+  --_radius: var(--emaki-radius, 2px);
+  --_font: var(--emaki-font, inherit);
+  --_loading: color-mix(in srgb, var(--_fg) 12%, transparent);
+
+  /* Full viewport, not the browser's centred box with margins. */
+  box-sizing: border-box;
+  width: 100%; height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  margin: 0; padding: 0; border: 0;
+  /* The dialog carries the backdrop colour itself, so axe can measure contrast; it cannot see ::backdrop. */
+  background: var(--_bg);
+  color: var(--_fg);
+  font-family: var(--_font);
+  overflow: hidden;
+}
+
+.emaki::backdrop { background: transparent; }
+
+/* Set by the script; beats the display of the controls below. */
+.emaki [hidden] { display: none; }
+
+/* The stage: the picture above, the caption below, both centred. border-box keeps
+   the padding inside the dialog's height, also on a page without a global reset. */
+.emaki-stage {
+  box-sizing: border-box;
+  margin: 0; height: 100%;
+  display: grid; grid-template-rows: 1fr auto;
+  place-items: center; gap: 14px;
+  padding: clamp(16px, 4vw, 56px);
+}
+
+/* width and height stay auto, not object-fit: with object-fit the image box
+   fills its cell, and a click beside a portrait picture would hit the image
+   box instead of the stage, so "click beside the image closes" would be dead. */
+.emaki-image {
+  display: block; min-height: 0;
+  width: auto; height: auto;
+  max-width: 100%; max-height: 100%;
+  border-radius: var(--_radius);
+}
+
+/* A subtle placeholder on the picture box while the next image loads. */
+.emaki.is-loading .emaki-image { background: var(--_loading); }
+
+.emaki-caption {
+  margin: 0; max-width: 62ch;
+  text-align: center;
+  color: var(--_muted);
+}
+
+/* Every control at least 48 px: a thumb, not a mouse pointer. */
+.emaki button {
+  position: absolute; z-index: 1;
+  display: grid; place-items: center;
+  width: 48px; height: 48px; padding: 0;
+  border: 1px solid var(--_border);
+  border-radius: var(--_radius);
+  background: color-mix(in srgb, var(--_bg) 60%, transparent);
+  color: var(--_fg);
+  font: inherit;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.emaki button:hover {
+  background: color-mix(in srgb, var(--_bg) 85%, transparent);
+}
+.emaki button:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 2px;
+}
+
+/* Specific enough to beat the shared font-size of the buttons above. */
+.emaki .emaki-close { top: 14px; right: 14px; font-size: 30px; }
+.emaki .emaki-prev { top: 50%; left: 14px; translate: 0 -50%; }
+.emaki .emaki-next { top: 50%; right: 14px; translate: 0 -50%; }
+
+.emaki-counter {
+  position: absolute; top: 20px; left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  color: var(--_accent);
+}
+
+/* Motion only when it is wanted: the script adds this class after it has
+   asked for prefers-reduced-motion. */
+.emaki--motion[open] { animation: emaki-open 0.18s ease-out; }
+@keyframes emaki-open {
+  from { opacity: 0; scale: 0.985; }
+}
+
+@media (max-width: 640px) {
+  .emaki .emaki-prev { left: 10px; }
+  .emaki .emaki-next { right: 10px; }
+}

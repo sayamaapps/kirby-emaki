@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+    # Public repository: GitHub-hosted runners cost no minutes.
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, mbstring, curl, dom
+          coverage: none
+
+      - name: Install dev dependencies (Kirby as fixture)
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Tests
+        run: sh tests/run.sh
+
+  script:
+    name: emaki.js
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Behaviour (fake DOM, no dependencies)
+        run: node --test tests/*.test.mjs
+
+      - name: Syntax check, no storage, no cookies, no foreign host, no inline style
+        run: |
+          node --check assets/emaki.js
+          if grep -nE 'localStorage|sessionStorage|document\.cookie|indexedDB' assets/emaki.js; then
+            echo "::error::emaki.js must not store anything in the browser"; exit 1
+          fi
+          if grep -nPi 'https?://(?!github\.com/sayamaapps)' assets/emaki.js assets/emaki.css; then
+            echo "::error::emaki.js and emaki.css must not name any address except the project page"; exit 1
+          fi
+          if grep -nE '\.style\.|setAttribute\((["'"'"'])style\1|style=' assets/emaki.js; then
+            echo "::error::emaki.js must not set inline styles (CSP: style-src self)"; exit 1
+          fi
+
+  browser:
+    name: Browser (Chromium)
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # The browser and the system libraries it needs.
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+
+      # xvfb-run gives the job a display; --workers=2 keeps the memory use modest.
+      - name: Viewer in the browser (fixture page, axe)
+        run: xvfb-run -a npx playwright test --workers=2
+
+      - name: Screenshots and traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failures-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          retention-days: 7

@@ -1,0 +1,44 @@
+{
+    "name": "sayamaapps/kirby-emaki",
+    "description": "Image viewer for Kirby CMS 5: a dependency-free lightbox built on <dialog>, served from your own server, plus a thin gallery helper that renders srcset tiles and large views from Kirby's own thumb presets. No CDN, no inline code, no cookies.",
+    "type": "kirby-plugin",
+    "license": "MIT",
+    "keywords": ["kirby", "kirby-plugin", "kirby-5", "lightbox", "gallery", "image-viewer", "srcset", "accessibility", "csp"],
+    "homepage": "https://github.com/sayamaapps/kirby-emaki",
+    "authors": [
+        {
+            "name": "Simon Räder",
+            "homepage": "https://sayamaapps.de"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/sayamaapps/kirby-emaki/issues",
+        "source": "https://github.com/sayamaapps/kirby-emaki"
+    },
+    "require": {
+        "php": "^8.2",
+        "getkirby/composer-installer": "^1.2"
+    },
+    "require-dev": {
+        "getkirby/cms": "^5.0"
+    },
+    "scripts": {
+        "test": "sh tests/run.sh"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "getkirby/composer-installer": true
+        },
+        "platform": {
+            "php": "8.2.0"
+        }
+    },
+    "extra": {
+        "installer-name": "emaki",
+        "kirby-cms-path": false,
+        "kirby": {
+            "compatible": "^5.0"
+        }
+    }
+}

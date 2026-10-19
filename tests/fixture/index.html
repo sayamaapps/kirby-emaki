@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emaki-Testseite</title>
+  <link rel="stylesheet" href="../../assets/emaki.css">
+  <script src="../../assets/emaki.js" defer data-dialog="Bild {n} von {count}" data-counter="{n} / {count}" data-close="Schließen" data-prev="Vorheriges Bild" data-next="Nächstes Bild"></script>
+</head>
+<body>
+  <main>
+    <h1>Emaki-Testseite</h1>
+    <p>Fiktive Beispielbilder für die Browsertest.</p>
+
+    <h2>Galerie mit drei Bildern</h2>
+    <div data-emaki>
+      <a href="img/innenhof.jpg" data-srcset="img/innenhof.jpg 800w" data-sizes="(max-width: 40rem) 100vw, 800px" data-emaki-caption="Unser Innenhof" data-emaki-image="innenhof"><img src="img/innenhof.jpg" srcset="img/innenhof.jpg 800w" sizes="(max-width: 40rem) 100vw, 33vw" width="800" height="600" alt="Innenhof-Ansicht" loading="lazy" decoding="async"></a>
+      <a href="img/eingang.jpg" data-emaki-image="eingang"><img src="img/eingang.jpg" width="600" height="900" alt="Hauseingang bei Abendlicht" loading="lazy" decoding="async"></a>
+      <a href="img/garten.jpg" data-srcset="img/garten.jpg 800w" data-emaki-caption=""><img src="img/garten.jpg" srcset="img/garten.jpg 800w" sizes="(max-width: 40rem) 100vw, 33vw" width="800" height="800" alt="Kleiner Garten" loading="lazy" decoding="async"></a>
+      <p><a href="info.txt">Leistungen als Textdatei</a></p>
+    </div>
+
+    <h2>Zweite Galerie mit zwei Bildern</h2>
+    <div data-emaki>
+      <a href="img/garten.jpg"><img src="img/garten.jpg" width="800" height="800" alt="Gartentor im Juni" loading="lazy" decoding="async"></a>
+      <a href="img/innenhof.jpg"><img src="img/innenhof.jpg" width="800" height="600" alt="Hof von oben" loading="lazy" decoding="async"></a>
+    </div>
+
+    <h2>Verschachtelt: Galerie in einer Galerie</h2>
+    <div data-emaki>
+      <a href="img/garten.jpg"><img src="img/garten.jpg" width="800" height="800" alt="Gartentor im Juni" loading="lazy" decoding="async"></a>
+      <a href="img/eingang.jpg"><img src="img/eingang.jpg" width="600" height="900" alt="Hauseingang" loading="lazy" decoding="async"></a>
+      <div data-emaki>
+        <a href="img/innenhof.jpg"><img src="img/innenhof.jpg" width="800" height="600" alt="Hof von innen" loading="lazy" decoding="async"></a>
+        <a href="img/garten.jpg"><img src="img/garten.jpg" width="800" height="800" alt="Gartentor von innen" loading="lazy" decoding="async"></a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
