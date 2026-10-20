@@ -318,7 +318,7 @@ The labels are also registered as Kirby translations under `emaki.<key>`.
 
 ## Privacy
 
-Emaki sets no cookies, uses no browser storage and sends nothing. The viewer's script and stylesheet come from your own server. The images are the ones your markup links: the image that is opened, and its two neighbours, which the viewer fetches in advance. If the markup links an image on another host, the browser fetches it from there. The `emaki:open` event stays in the page until your own code acts on it. [PRIVACY.md](PRIVACY.md) describes the implementation in English, and [DATENSCHUTZ.md](DATENSCHUTZ.md) holds the German text for a site's privacy policy.
+Emaki processes no visitor data: it sets no cookies, uses no browser storage and sends nothing. There is nothing to add to a site's privacy policy, as long as the images are served from your own server. An image that your markup links on another host is fetched from that host, which then sees the visitor's request.
 
 ## Maintenance
 
