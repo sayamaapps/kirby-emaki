@@ -257,7 +257,7 @@ the image box. ≈ 4 kB. No `@import`, no `url(http…)`.
 
 **Core:** `index.php`, `src/I18n.php`, `src/Options.php`,
 `translations/*.php`, `snippets/emaki.php`, `composer.json`, CI, CHANGELOG,
-DATENSCHUTZ/PRIVACY, `tests/I18nTest.php`, the four guard tests, this file.
+`tests/I18nTest.php`, the four guard tests, this file.
 
 **(a) JS/CSS:** `assets/emaki.js`, `assets/emaki.css`,
 `tests/emaki-js.test.mjs` (extend). Acceptance: §4 and §5 complete;
