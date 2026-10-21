@@ -322,7 +322,7 @@ Emaki processes no visitor data: it sets no cookies, uses no browser storage and
 
 ## Maintenance
 
-Emaki is maintained for our own projects. Issues are welcome, but there is no support promise.
+This module is open source under the MIT license and is maintained for the author's own projects. Issues and pull requests are welcome, but there is no support promise and no release schedule. Report security problems privately through GitHub's private vulnerability reporting (the "Report a vulnerability" button on the Security tab).
 
 ## Licence
 
