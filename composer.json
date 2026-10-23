@@ -1,6 +1,6 @@
 {
     "name": "sayamaapps/kirby-emaki",
-    "description": "Image viewer for Kirby CMS 5: a dependency-free lightbox built on <dialog>, served from your own server, plus a thin gallery helper that renders srcset tiles and large views from Kirby's own thumb presets. No CDN, no inline code, no cookies.",
+    "description": "Dependency-free image viewer and gallery helper for Kirby CMS 5.",
     "type": "kirby-plugin",
     "license": "MIT",
     "keywords": ["kirby", "kirby-plugin", "kirby-5", "lightbox", "gallery", "image-viewer", "srcset", "accessibility", "csp"],
