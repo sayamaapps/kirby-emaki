@@ -24,12 +24,6 @@ Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after a
 composer require sayamaapps/kirby-emaki
 ```
 
-Until the package is on Packagist, add the repository to `composer.json` first:
-
-```json
-"repositories": [{ "type": "vcs", "url": "https://github.com/sayamaapps/kirby-emaki" }]
-```
-
 Composer installs to `site/plugins/emaki/`. Add that path to `.gitignore` and deploy it like `vendor/`.
 
 ## Usage
