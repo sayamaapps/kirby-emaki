@@ -2,13 +2,16 @@
 
 namespace Sayamaapps\Emaki;
 
+use Kirby\Toolkit\I18n as KirbyI18n;
+
 /**
- * Visitor-facing strings, Kirby-free.
+ * Visitor-facing labels of the viewer.
  *
- * The tables live in translations/<language>.php and are also registered as
- * Kirby plugin translations under `emaki.<key>` (config/translations.php).
- * Emaki reads its own tables: a missing Kirby translation must never silently
- * turn a German label English.
+ * The strings are Kirby plugin translations under `sayamaapps.emaki.<key>`
+ * (config/translations.php, translations/<language>.php). This class reads them
+ * with Kirby's own translation lookup, in the language set for the request.
+ * A key missing in that language falls back to English through Kirby, then
+ * to the key itself.
  *
  * `sayamaapps.emaki.texts` replaces single strings, per language or for all:
  *
@@ -16,8 +19,9 @@ namespace Sayamaapps\Emaki;
  *   'sayamaapps.emaki.texts' => ['button.close' => 'Close']
  *
  * The language is set once per request (Viewer::prepare(), Options::language())
- * and defaults to English. Missing keys fall back to English, then to the key.
+ * and defaults to English.
  *
+ * @package   Kirby Emaki
  * @author    Simon Räder
  * @link      https://github.com/sayamaapps/kirby-emaki
  * @copyright Simon Räder
@@ -33,24 +37,22 @@ final class I18n
 	/** @var array<string,string> */
 	private static array $overrides = [];
 
-	/** @var array<string, array<string,string>> */
-	private static array $tables = [];
-
 	/**
 	 * The labels the script needs to build the dialog, for the data
 	 * attributes of the <script> tag (Viewer::tags()). Keys are the attribute
-	 * names without the `data-` prefix.
+	 * names without the `data-` prefix. Placeholders such as `{n}` stay in
+	 * the text: the script fills them.
 	 *
 	 * @return array<string,string>
 	 */
 	public static function labels(): array
 	{
 		return [
-			'dialog'  => self::t('dialog'),
-			'close'   => self::t('button.close'),
-			'prev'    => self::t('button.prev'),
-			'next'    => self::t('button.next'),
-			'counter' => self::t('counter'),
+			'dialog'  => self::label('dialog'),
+			'close'   => self::label('button.close'),
+			'prev'    => self::label('button.prev'),
+			'next'    => self::label('button.next'),
+			'counter' => self::label('counter'),
 		];
 	}
 
@@ -60,22 +62,6 @@ final class I18n
 	public static function language(): string
 	{
 		return self::$language;
-	}
-
-	/**
-	 * The labels as Kirby plugin translations: `emaki.<key>` per language.
-	 *
-	 * @return array<string, array<string,string>>
-	 */
-	public static function pluginTranslations(): array
-	{
-		$translations = [];
-		foreach (self::LANGUAGES as $language) {
-			foreach (self::table($language) as $key => $text) {
-				$translations[$language]['emaki.' . $key] = $text;
-			}
-		}
-		return $translations;
 	}
 
 	/**
@@ -106,29 +92,15 @@ final class I18n
 	}
 
 	/**
-	 * Translates a key. `{name}` placeholders are replaced with the given values, unescaped.
-	 *
-	 * @param array<string, scalar> $values
+	 * One label: the override from `texts`, else the Kirby translation in the current language.
 	 */
-	public static function t(string $key, array $values = []): string
+	private static function label(string $key): string
 	{
-		$text = self::$overrides[$key] ?? self::table(self::$language)[$key] ?? self::table('en')[$key] ?? $key;
-		foreach ($values as $name => $value) {
-			$text = str_replace('{' . $name . '}', (string)$value, $text);
+		if (isset(self::$overrides[$key])) {
+			return self::$overrides[$key];
 		}
-		return $text;
-	}
 
-	/**
-	 * The table of one language, read from translations/<language>.php once.
-	 *
-	 * @return array<string,string>
-	 */
-	public static function table(string $language): array
-	{
-		if (!in_array($language, self::LANGUAGES, true)) {
-			return [];
-		}
-		return self::$tables[$language] ??= require dirname(__DIR__) . '/translations/' . $language . '.php';
+		$text = KirbyI18n::translate('sayamaapps.emaki.' . $key, null, self::$language);
+		return is_string($text) ? $text : $key;
 	}
 }
