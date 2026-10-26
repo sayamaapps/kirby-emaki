@@ -27,11 +27,11 @@ final class Options
 	/** Widths for the large view when no `thumbs.srcsets` preset is configured; never above the file's width. */
 	public const LARGE_WIDTHS = [800, 1200, 1800, 2400];
 
-	/** Option prefix before the rename, read as a fallback until the next major version. */
-	public const LEGACY_PREFIX = 'emaki.';
-
 	/** Option prefix of the plugin. */
-	public const PREFIX = 'sayamaapps.emaki.';
+	public const OPTION_PREFIX = 'sayamaapps.emaki.';
+
+	/** Option prefix of 1.x, read as a fallback until the next major version. Keeps its 1.0 value. */
+	public const PREFIX = 'emaki.';
 
 	/** Widths for the tile when no preset is configured; never above the file's width. */
 	public const TILE_WIDTHS = [320, 480, 720, 960];
@@ -50,16 +50,16 @@ final class Options
 	 */
 	public static function get(App $kirby, string $key, mixed $default = null): mixed
 	{
-		$value = $kirby->option(self::PREFIX . $key);
+		$value = $kirby->option(self::OPTION_PREFIX . $key);
 		if ($value !== null) {
 			return $value;
 		}
 
 		// The older spelling still works, with a deprecation (README, Deprecations).
-		$legacy = $kirby->option(self::LEGACY_PREFIX . $key);
+		$legacy = $kirby->option(self::PREFIX . $key);
 		if ($legacy !== null) {
 			Helpers::deprecated(
-				'Emaki: emaki.' . $key . ' is deprecated, use ' . self::PREFIX . $key,
+				'Emaki: emaki.' . $key . ' is deprecated, use ' . self::OPTION_PREFIX . $key,
 				'option-prefix'
 			);
 		}
