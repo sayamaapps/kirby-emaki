@@ -27,7 +27,7 @@ composer analyze:phpmd            # PHP Mess Detector
 composer analyze:unused           # unused Composer packages
 composer analyze:require-checker  # undeclared dependencies
 composer normalize:check          # composer.json layout
-npm ci && npm run test:web        # browser tests (Chromium)
+npm ci --prefix tests/browser && npm --prefix tests/browser run test:web   # browser tests (Chromium)
 ```
 
 Code style is checked with PHP-CS-Fixer and the Kirby rule set (`getkirby/php-cs`). The package is installed globally, because it needs PHP 8.3 or newer and this package supports PHP 8.2:

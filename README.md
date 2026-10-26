@@ -184,7 +184,7 @@ Emaki processes no visitor data: no cookies, no browser storage, no tracking. It
 
 ## Maintenance
 
-Tests: `composer test` (PHP) and `npm ci && npm run test:web` (browser). Checks: see [CONTRIBUTING](.github/CONTRIBUTING.md). Issues and pull requests are welcome, without a support promise. Report security problems privately through GitHub's vulnerability reporting ([SECURITY](.github/SECURITY.md)).
+Tests: `composer test` (PHP) and `npm ci --prefix tests/browser && npm --prefix tests/browser run test:web` (browser). Checks: see [CONTRIBUTING](.github/CONTRIBUTING.md). Issues and pull requests are welcome, without a support promise. Report security problems privately through GitHub's vulnerability reporting ([SECURITY](.github/SECURITY.md)).
 
 ## License
 

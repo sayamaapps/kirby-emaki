@@ -174,15 +174,25 @@ jobs:
         with:
           node-version: '22'
 
+      # The fixture images are generated with GD before the tests run.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd
+          coverage: none
+
       - name: Install dependencies
+        working-directory: tests/browser
         run: npm ci --no-audit --no-fund
 
       # The browser and the system libraries it needs.
       - name: Chromium
+        working-directory: tests/browser
         run: npx playwright install --with-deps chromium
 
       # xvfb-run gives the job a display; --workers=2 keeps the memory use modest.
       - name: Viewer in the browser (fixture page, axe)
+        working-directory: tests/browser
         run: xvfb-run -a npx playwright test --workers=2
 
       - name: Screenshots and traces of failed tests
@@ -190,5 +200,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browser-failures-${{ github.run_id }}-${{ github.run_attempt }}
-          path: test-results/
+          path: tests/browser/test-results/
           retention-days: 7

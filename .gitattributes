@@ -11,11 +11,8 @@
 /composer-require-checker.json export-ignore
 /composer-unused.php        export-ignore
 /docs                       export-ignore
-/package.json               export-ignore
-/package-lock.json          export-ignore
 /phpmd.xml.dist             export-ignore
 /phpunit.xml.dist           export-ignore
-/playwright.config.ts       export-ignore
 /psalm.xml.dist             export-ignore
 /scripts                    export-ignore
 /tests                      export-ignore
