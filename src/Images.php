@@ -11,6 +11,7 @@ use Kirby\Image\Image;
  * The attributes for a tile and its large view, all from Kirby thumbs. The
  * original file is never the `href`, never upscaled and never written to.
  *
+ * @package   Kirby Emaki
  * @author    Simon Räder
  * @link      https://github.com/sayamaapps/kirby-emaki
  * @copyright Simon Räder

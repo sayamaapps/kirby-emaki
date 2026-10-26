@@ -17,6 +17,7 @@ use Kirby\Cms\Helpers;
  * Defaults are given at each call. The `options` block of the plugin lists the
  * keys with null: a default there would hide the older spelling.
  *
+ * @package   Kirby Emaki
  * @author    Simon Räder
  * @link      https://github.com/sayamaapps/kirby-emaki
  * @copyright Simon Räder

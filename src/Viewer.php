@@ -9,6 +9,7 @@ use WeakMap;
  * The viewer's tags and the request setup: what the `emaki` snippet prints and
  * what `emaki/gallery` needs before it prints a label.
  *
+ * @package   Kirby Emaki
  * @author    Simon Räder
  * @link      https://github.com/sayamaapps/kirby-emaki
  * @copyright Simon Räder

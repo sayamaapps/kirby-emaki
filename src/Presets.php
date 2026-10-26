@@ -8,6 +8,7 @@ use Kirby\Cms\App;
  * Turns a `thumbs.srcsets` preset name (or a plain list of widths) into the
  * widths Emaki renders for one file.
  *
+ * @package   Kirby Emaki
  * @author    Simon Räder
  * @link      https://github.com/sayamaapps/kirby-emaki
  * @copyright Simon Räder
