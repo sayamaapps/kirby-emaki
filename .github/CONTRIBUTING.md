@@ -26,6 +26,7 @@ composer analyze:psalm            # Psalm
 composer analyze:phpmd            # PHP Mess Detector
 composer analyze:unused           # unused Composer packages
 composer analyze:require-checker  # undeclared dependencies
+composer check-platform-reqs       # platform requirements
 composer normalize:check          # composer.json layout
 npm ci --prefix tests/browser && npm --prefix tests/browser run test:web   # browser tests (Chromium)
 ```
