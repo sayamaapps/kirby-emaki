@@ -38,6 +38,19 @@ final class I18n
 	private static array $overrides = [];
 
 	/**
+	 * One label: the override from `texts`, else the Kirby translation in the current language.
+	 */
+	private static function label(string $key): string
+	{
+		if (isset(self::$overrides[$key])) {
+			return self::$overrides[$key];
+		}
+
+		$text = KirbyI18n::translate('sayamaapps.emaki.' . $key, null, self::$language);
+		return is_string($text) ? $text : $key;
+	}
+
+	/**
 	 * The labels the script needs to build the dialog, for the data
 	 * attributes of the <script> tag (Viewer::tags()). Keys are the attribute
 	 * names without the `data-` prefix. Placeholders such as `{n}` stay in
@@ -89,18 +102,5 @@ final class I18n
 				}
 			}
 		}
-	}
-
-	/**
-	 * One label: the override from `texts`, else the Kirby translation in the current language.
-	 */
-	private static function label(string $key): string
-	{
-		if (isset(self::$overrides[$key])) {
-			return self::$overrides[$key];
-		}
-
-		$text = KirbyI18n::translate('sayamaapps.emaki.' . $key, null, self::$language);
-		return is_string($text) ? $text : $key;
 	}
 }

@@ -20,11 +20,81 @@ use Sayamaapps\Emaki\Images;
 #[CoversNothing]
 final class KirbyTest extends PluginTestCase
 {
+	/** @var array<string,string> SHA-256 of every original, taken after it was written. */
+	private array $originals = [];
+
 	/** The throwaway site of the current test. */
 	private string $site;
 
-	/** @var array<string,string> SHA-256 of every original, taken after it was written. */
-	private array $originals = [];
+	/** A new Kirby instance over the throwaway site. Becomes the current instance. */
+	private function app(array $options = []): App
+	{
+		Snippet::$cache = []; // Kirby remembers snippet paths per process
+
+		return new App([
+			'roots' => [
+				'index'   => $this->site . '/public',
+				'content' => $this->site . '/content',
+				'site'    => $this->site . '/site',
+				'storage' => $this->site . '/storage',
+				'media'   => $this->site . '/public/media',
+			],
+			'options' => ['url' => 'https://site.example'] + $options,
+		]);
+	}
+
+	/** Each original file's hash is still the one it had when it was written. */
+	private function assertOriginalsUnchanged(): void
+	{
+		foreach ($this->originals as $path => $hash) {
+			expect($hash, hash_file('sha256', $path), 'original unchanged: ' . basename($path));
+		}
+	}
+
+	/** A file of the test page, by name. */
+	private function file(App $kirby, string $name): mixed
+	{
+		return $kirby->page('home')->file($name);
+	}
+
+	/** The content folder of the test page, with its trailing slash. */
+	private function home(): string
+	{
+		return $this->site . '/content/home/';
+	}
+
+	/** Inline style or script anywhere in an output: a Content Security Policy problem. */
+	private static function inlineCode(string $html): string|null
+	{
+		foreach (['~<style\b~i', '~<script\b(?![^>]*\ssrc=)~i', '~\sstyle\s*=~i', '~\son[a-z]+\s*=~i'] as $pattern) {
+			if (preg_match($pattern, $html, $hit) === 1) {
+				return $hit[0];
+			}
+		}
+
+		return null;
+	}
+
+	/** A picture with a sky, a sun and a meadow, saved in the format of the path's extension. */
+	private static function makeImage(string $path, int $width, int $height): void
+	{
+		$im = imagecreatetruecolor($width, $height);
+		imagefilledrectangle($im, 0, 0, $width, $height, imagecolorallocate($im, 30, 90, 140));
+		imagefilledellipse($im, (int)($width * 0.7), (int)($height * 0.4), (int)($width * 0.3), (int)($height * 0.3), imagecolorallocate($im, 240, 200, 60));
+		imagefilledrectangle($im, 0, (int)($height * 0.75), $width, $height, imagecolorallocate($im, 60, 140, 70));
+
+		match (pathinfo($path, PATHINFO_EXTENSION)) {
+			'jpg'  => imagejpeg($im, $path, 90),
+			'png'  => imagepng($im, $path),
+			'webp' => imagewebp($im, $path, 90),
+		};
+	}
+
+	/** The file on disk behind an address of the site. */
+	private function onDisk(string $url): string
+	{
+		return $this->site . '/public' . parse_url($url, PHP_URL_PATH);
+	}
 
 	protected function setUp(): void
 	{
@@ -39,6 +109,14 @@ final class KirbyTest extends PluginTestCase
 		file_put_contents($this->home() . 'default.txt', "Title: Home\n");
 
 		$this->writeOriginals();
+	}
+
+	/** The widths of a srcset, in order. @return int[] */
+	private static function srcsetWidths(string $set): array
+	{
+		preg_match_all('/\s(\d+)w(?=,|$)/', $set, $m);
+
+		return array_map('intval', $m[1]);
 	}
 
 	protected function tearDown(): void
@@ -94,114 +172,6 @@ final class KirbyTest extends PluginTestCase
 		expect($a, emaki_attributes($wide), 'emaki_attributes() gives the same attributes');
 	}
 
-	public function testSizesAndFormatOptions(): void
-	{
-		$kirby = $this->app(['emaki.active' => true, 'emaki.sizes' => '80vw']);
-		expect('80vw', Images::attributes($this->file($kirby, 'wide.jpg'))['data-sizes'], 'emaki.sizes sets data-sizes');
-
-		$kirby      = $this->app(['emaki.active' => true, 'emaki.format' => 'webp']);
-		$fromOption = Images::attributes($this->file($kirby, 'flat.png'));
-		expect(1, preg_match('~\.webp$~', $fromOption['href']), 'emaki.format: href is webp');
-		expect(IMAGETYPE_WEBP, getimagesize($this->onDisk($fromOption['href']))[2], 'emaki.format: the file on disk is webp');
-
-		$kirby   = $this->app(['emaki.active' => true]);
-		$perCall = Images::attributes($this->file($kirby, 'flat.png'), ['format' => 'webp']);
-		expect(1, preg_match('~\.webp$~', $perCall['href']), 'format per call: href is webp');
-		expect(1, preg_match('~\.webp$~', $perCall['src']), 'format per call: src is webp');
-		expect(1, preg_match('~\.png$~', Images::attributes($this->file($kirby, 'flat.png'))['href']), 'no format: the file keeps its own format');
-
-		// format null per call: `emaki.format` applies; with that unset too, the site's `thumbs.format`.
-		$kirby = $this->app(['emaki.active' => true, 'emaki.format' => 'webp']);
-		expect(1, preg_match('~\.webp$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null per call: emaki.format applies');
-
-		$kirby = $this->app(['emaki.active' => true, 'thumbs' => ['format' => 'jpg']]);
-		expect(1, preg_match('~\.jpg$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
-	}
-
-	public function testListsAndPresetsOfTheSite(): void
-	{
-		$kirby  = $this->app(['emaki.active' => true]);
-		$wide   = $this->file($kirby, 'wide.jpg');
-		$custom = Images::attributes($wide, ['large' => [600, 1200], 'tile' => [200, 400]]);
-		expect([600, 1200], self::srcsetWidths($custom['data-srcset']), 'large as a list');
-		expect([200, 400], self::srcsetWidths($custom['srcset']), 'tile as a list');
-		expect(400, $custom['width'], 'tile list without 720: the largest');
-
-		// A preset of the site's `thumbs.srcsets`, and a name that does not exist.
-		$kirby = $this->app(['emaki.active' => true, 'emaki.srcset' => 'gallery', 'thumbs' => ['srcsets' => ['gallery' => [500, 1000]]]]);
-		expect([500, 1000], self::srcsetWidths(Images::attributes($this->file($kirby, 'wide.jpg'))['data-srcset']), 'emaki.srcset names a preset of the site');
-
-		$kirby = $this->app(['emaki.active' => true, 'emaki.srcset' => 'nope']);
-		expect([800, 1200, 1800, 2400], self::srcsetWidths(Images::attributes($this->file($kirby, 'wide.jpg'))['data-srcset']), 'missing preset: the fallback list');
-	}
-
-	public function testRotatedJpegIsUpright(): void
-	{
-		$kirby  = $this->app(['emaki.active' => true]);
-		$turned = $this->file($kirby, 'turned.jpg');
-		expect(1000, $turned->width(), 'EXIF orientation 6: width of the oriented file');
-		expect(1600, $turned->height(), 'EXIF orientation 6: height of the oriented file');
-
-		$t = Images::attributes($turned);
-		expect(1, preg_match('~-1000x\.jpg$~', $t['href']), 'oriented: href at the oriented width');
-		expect([1000, 1600], array_slice(getimagesize($this->onDisk($t['href'])), 0, 2), 'oriented: the large variant on disk is upright');
-		expect(720, $t['width'], 'oriented: tile width');
-		expect(1152, $t['height'], 'oriented: tile height is portrait');
-		expect([720, 1152], array_slice(getimagesize($this->onDisk($t['src'])), 0, 2), 'oriented: the tile on disk is upright');
-	}
-
-	public function testPngWebpSmallSvgAndPdf(): void
-	{
-		$kirby = $this->app(['emaki.active' => true]);
-
-		$flat = Images::attributes($this->file($kirby, 'flat.png'));
-		expect(1, preg_match('~-1200x\.png$~', $flat['href']), 'PNG: href at its own width');
-
-		$modern = Images::attributes($this->file($kirby, 'modern.webp'));
-		expect(1, preg_match('~-1000x\.webp$~', $modern['href']), 'WebP: href at its own width');
-		expect(1, preg_match('~-720x\.webp$~', $modern['src']), 'WebP: tile at 720 px');
-
-		$small = Images::attributes($this->file($kirby, 'small.png'));
-		expect([300], self::srcsetWidths($small['data-srcset']), 'no upscaling: a 300 px file has one large variant');
-		expect([300], self::srcsetWidths($small['srcset']), 'no upscaling: a 300 px file has one tile variant');
-		expect(300, $small['width'], 'no upscaling: src is 300 px');
-		expect([300, 200], array_slice(getimagesize($this->onDisk($small['href'])), 0, 2), 'no upscaling: the variant on disk is 300 px');
-
-		$svg = Images::attributes($this->file($kirby, 'logo.svg'));
-		expect($this->file($kirby, 'logo.svg')->url(), $svg['href'], 'SVG: href is the file itself');
-		expect($svg['href'], $svg['src'], 'SVG: src is the file itself');
-		expect(null, $svg['data-srcset'], 'SVG: no large srcset');
-		expect(null, $svg['srcset'], 'SVG: no tile srcset');
-		expect(200, $svg['width'], 'SVG: its own width');
-		expect(100, $svg['height'], 'SVG: its own height');
-
-		$pdf = Images::attributes($this->file($kirby, 'notes.pdf'));
-		expect($this->file($kirby, 'notes.pdf')->url(), $pdf['href'], 'PDF: href is the file itself');
-		expect([null, null], [$pdf['width'], $pdf['height']], 'PDF: no size');
-		expect(null, $pdf['srcset'], 'PDF: no srcset');
-	}
-
-	public function testGalleryMarkupWhileActiveAndInactive(): void
-	{
-		$kirby = $this->app(['emaki.active' => true]);
-		$html  = snippet('emaki/gallery', ['files' => $kirby->page('home')->files()], true);
-
-		expect(1, preg_match('~^<div class="emaki-gallery" data-emaki>\n~', $html), 'container with data-emaki while active');
-		expect(7, substr_count($html, '<a class="emaki-item"'), 'one tile per image; the PDF is skipped');
-		holds(!str_contains($html, 'notes.pdf'), 'the PDF is not in the markup');
-		expect(7, substr_count($html, 'loading="lazy" decoding="async"'), 'every <img> lazy and async');
-
-		$tile = '~<a class="emaki-item" href="[^"]+-2400x\.jpg" data-srcset="[^"]+" data-sizes="100vw" data-emaki-caption="Our courtyard">\n'
-			. '    <img src="[^"]+" srcset="[^"]+" sizes="\(max-width: 40rem\) 100vw, 33vw" width="720" height="480" alt="Our courtyard" loading="lazy" decoding="async">\n'
-			. '  </a>\n~';
-		expect(1, preg_match($tile, $html), 'tile markup of §3.2');
-
-		$inactive = $this->app([]);
-		$offHtml  = snippet('emaki/gallery', ['files' => $inactive->page('home')->files()], true);
-		expect(str_replace(' data-emaki>', '>', $html), $offHtml, 'inactive: the same markup without data-emaki');
-		holds(preg_match('~<div[^>]* data-emaki[\s>]~', $offHtml) === 0, 'inactive: no data-emaki on the container');
-	}
-
 	public function testGalleryContainerOptionsAndAttrs(): void
 	{
 		$kirby = $this->app(['emaki.active' => true]);
@@ -236,39 +206,90 @@ final class KirbyTest extends PluginTestCase
 		expect('', trim(snippet('emaki/gallery', ['files' => [$page->file('notes.pdf')]], true)), 'only non-images: nothing');
 	}
 
-	public function testTagsArePrintedOnceAndLabelsAreEnglish(): void
+	public function testGalleryMarkupWhileActiveAndInactive(): void
 	{
 		$kirby = $this->app(['emaki.active' => true]);
-		$tags  = snippet('emaki', [], true);
+		$html  = snippet('emaki/gallery', ['files' => $kirby->page('home')->files()], true);
 
-		expect(1, substr_count($tags, '<link rel="stylesheet"'), 'one stylesheet');
-		expect(1, substr_count($tags, '<script src='), 'one script');
-		holds(str_contains($tags, ' defer'), 'script deferred');
-		holds(str_contains($tags, 'data-dialog="Image {n} of {count}"'), 'English labels by default');
-		expect('', trim(snippet('emaki', [], true)), 'the tags are printed once per page');
-		holds(preg_match('~^https?://[^/]+/media/plugins/sayamaapps/emaki/[^/]+-\d+/emaki\.js$~', (string)emaki_asset_url('emaki.js')) === 1, 'asset URL: /media/plugins/sayamaapps/emaki/<hash>-<time>/emaki.js on the site, no query string');
+		expect(1, preg_match('~^<div class="emaki-gallery" data-emaki>\n~', $html), 'container with data-emaki while active');
+		expect(7, substr_count($html, '<a class="emaki-item"'), 'one tile per image; the PDF is skipped');
+		holds(!str_contains($html, 'notes.pdf'), 'the PDF is not in the markup');
+		expect(7, substr_count($html, 'loading="lazy" decoding="async"'), 'every <img> lazy and async');
+
+		$tile = '~<a class="emaki-item" href="[^"]+-2400x\.jpg" data-srcset="[^"]+" data-sizes="100vw" data-emaki-caption="Our courtyard">\n'
+			. '    <img src="[^"]+" srcset="[^"]+" sizes="\(max-width: 40rem\) 100vw, 33vw" width="720" height="480" alt="Our courtyard" loading="lazy" decoding="async">\n'
+			. '  </a>\n~';
+		expect(1, preg_match($tile, $html), 'tile markup of §3.2');
+
+		$inactive = $this->app([]);
+		$offHtml  = snippet('emaki/gallery', ['files' => $inactive->page('home')->files()], true);
+		expect(str_replace(' data-emaki>', '>', $html), $offHtml, 'inactive: the same markup without data-emaki');
+		holds(preg_match('~<div[^>]* data-emaki[\s>]~', $offHtml) === 0, 'inactive: no data-emaki on the container');
 	}
 
-	public function testSwitchedOffPrintsNothing(): void
+	public function testListsAndPresetsOfTheSite(): void
 	{
-		$this->app(['emaki.active' => false]);
-		expect('', trim(snippet('emaki', [], true)), 'emaki off: nothing');
+		$kirby  = $this->app(['emaki.active' => true]);
+		$wide   = $this->file($kirby, 'wide.jpg');
+		$custom = Images::attributes($wide, ['large' => [600, 1200], 'tile' => [200, 400]]);
+		expect([600, 1200], self::srcsetWidths($custom['data-srcset']), 'large as a list');
+		expect([200, 400], self::srcsetWidths($custom['srcset']), 'tile as a list');
+		expect(400, $custom['width'], 'tile list without 720: the largest');
+
+		// A preset of the site's `thumbs.srcsets`, and a name that does not exist.
+		$kirby = $this->app(['emaki.active' => true, 'emaki.srcset' => 'gallery', 'thumbs' => ['srcsets' => ['gallery' => [500, 1000]]]]);
+		expect([500, 1000], self::srcsetWidths(Images::attributes($this->file($kirby, 'wide.jpg'))['data-srcset']), 'emaki.srcset names a preset of the site');
+
+		$kirby = $this->app(['emaki.active' => true, 'emaki.srcset' => 'nope']);
+		expect([800, 1200, 1800, 2400], self::srcsetWidths(Images::attributes($this->file($kirby, 'wide.jpg'))['data-srcset']), 'missing preset: the fallback list');
 	}
 
-	public function testTextsAndLanguageReachTheScriptTag(): void
+	public function testNoInlineStyleOrScriptInOutput(): void
 	{
-		$this->app(['emaki.active' => true, 'emaki.texts' => ['button.close' => 'Zumachen']]);
-		holds(str_contains(snippet('emaki', [], true), 'data-close="Zumachen"'), 'emaki.texts reaches the script tag');
+		$kirby   = $this->app(['emaki.active' => true]);
+		$outputs = [
+			snippet('emaki/gallery', ['files' => $kirby->page('home')->files(), 'attrs' => ['id' => 'g1']], true),
+			snippet('emaki/gallery', ['files' => [$this->file($kirby, 'hostile.png')]], true),
+			snippet('emaki', [], true),
+		];
 
-		$this->app(['emaki.active' => true, 'emaki.language' => 'de']);
-		$german = snippet('emaki', [], true);
-		holds(str_contains($german, 'data-close="Schließen"') && str_contains($german, 'data-dialog="Bild {n} von {count}"'), 'German labels in the script tag');
+		$kirby     = $this->app(['emaki.active' => true, 'emaki.language' => 'de']);
+		$outputs[] = snippet('emaki', [], true);
+
+		foreach ($outputs as $output) {
+			expect(null, self::inlineCode($output), 'no inline style or script');
+		}
 	}
 
-	public function testStyleOptionOmitsTheStylesheet(): void
+	public function testPngWebpSmallSvgAndPdf(): void
 	{
-		$this->app(['emaki.active' => true, 'emaki.style' => false]);
-		holds(!str_contains(snippet('emaki', [], true), '<link'), 'emaki.style false: no stylesheet tag');
+		$kirby = $this->app(['emaki.active' => true]);
+
+		$flat = Images::attributes($this->file($kirby, 'flat.png'));
+		expect(1, preg_match('~-1200x\.png$~', $flat['href']), 'PNG: href at its own width');
+
+		$modern = Images::attributes($this->file($kirby, 'modern.webp'));
+		expect(1, preg_match('~-1000x\.webp$~', $modern['href']), 'WebP: href at its own width');
+		expect(1, preg_match('~-720x\.webp$~', $modern['src']), 'WebP: tile at 720 px');
+
+		$small = Images::attributes($this->file($kirby, 'small.png'));
+		expect([300], self::srcsetWidths($small['data-srcset']), 'no upscaling: a 300 px file has one large variant');
+		expect([300], self::srcsetWidths($small['srcset']), 'no upscaling: a 300 px file has one tile variant');
+		expect(300, $small['width'], 'no upscaling: src is 300 px');
+		expect([300, 200], array_slice(getimagesize($this->onDisk($small['href'])), 0, 2), 'no upscaling: the variant on disk is 300 px');
+
+		$svg = Images::attributes($this->file($kirby, 'logo.svg'));
+		expect($this->file($kirby, 'logo.svg')->url(), $svg['href'], 'SVG: href is the file itself');
+		expect($svg['href'], $svg['src'], 'SVG: src is the file itself');
+		expect(null, $svg['data-srcset'], 'SVG: no large srcset');
+		expect(null, $svg['srcset'], 'SVG: no tile srcset');
+		expect(200, $svg['width'], 'SVG: its own width');
+		expect(100, $svg['height'], 'SVG: its own height');
+
+		$pdf = Images::attributes($this->file($kirby, 'notes.pdf'));
+		expect($this->file($kirby, 'notes.pdf')->url(), $pdf['href'], 'PDF: href is the file itself');
+		expect([null, null], [$pdf['width'], $pdf['height']], 'PDF: no size');
+		expect(null, $pdf['srcset'], 'PDF: no srcset');
 	}
 
 	public function testQueuedThumbInUnwritableFolderGivesNull(): void
@@ -289,6 +310,80 @@ final class KirbyTest extends PluginTestCase
 		} finally {
 			chmod($thumbDir, 0755);
 		}
+	}
+
+	public function testRotatedJpegIsUpright(): void
+	{
+		$kirby  = $this->app(['emaki.active' => true]);
+		$turned = $this->file($kirby, 'turned.jpg');
+		expect(1000, $turned->width(), 'EXIF orientation 6: width of the oriented file');
+		expect(1600, $turned->height(), 'EXIF orientation 6: height of the oriented file');
+
+		$t = Images::attributes($turned);
+		expect(1, preg_match('~-1000x\.jpg$~', $t['href']), 'oriented: href at the oriented width');
+		expect([1000, 1600], array_slice(getimagesize($this->onDisk($t['href'])), 0, 2), 'oriented: the large variant on disk is upright');
+		expect(720, $t['width'], 'oriented: tile width');
+		expect(1152, $t['height'], 'oriented: tile height is portrait');
+		expect([720, 1152], array_slice(getimagesize($this->onDisk($t['src'])), 0, 2), 'oriented: the tile on disk is upright');
+	}
+
+	public function testSizesAndFormatOptions(): void
+	{
+		$kirby = $this->app(['emaki.active' => true, 'emaki.sizes' => '80vw']);
+		expect('80vw', Images::attributes($this->file($kirby, 'wide.jpg'))['data-sizes'], 'emaki.sizes sets data-sizes');
+
+		$kirby      = $this->app(['emaki.active' => true, 'emaki.format' => 'webp']);
+		$fromOption = Images::attributes($this->file($kirby, 'flat.png'));
+		expect(1, preg_match('~\.webp$~', $fromOption['href']), 'emaki.format: href is webp');
+		expect(IMAGETYPE_WEBP, getimagesize($this->onDisk($fromOption['href']))[2], 'emaki.format: the file on disk is webp');
+
+		$kirby   = $this->app(['emaki.active' => true]);
+		$perCall = Images::attributes($this->file($kirby, 'flat.png'), ['format' => 'webp']);
+		expect(1, preg_match('~\.webp$~', $perCall['href']), 'format per call: href is webp');
+		expect(1, preg_match('~\.webp$~', $perCall['src']), 'format per call: src is webp');
+		expect(1, preg_match('~\.png$~', Images::attributes($this->file($kirby, 'flat.png'))['href']), 'no format: the file keeps its own format');
+
+		// format null per call: `emaki.format` applies; with that unset too, the site's `thumbs.format`.
+		$kirby = $this->app(['emaki.active' => true, 'emaki.format' => 'webp']);
+		expect(1, preg_match('~\.webp$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null per call: emaki.format applies');
+
+		$kirby = $this->app(['emaki.active' => true, 'thumbs' => ['format' => 'jpg']]);
+		expect(1, preg_match('~\.jpg$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
+	}
+
+	public function testStyleOptionOmitsTheStylesheet(): void
+	{
+		$this->app(['emaki.active' => true, 'emaki.style' => false]);
+		holds(!str_contains(snippet('emaki', [], true), '<link'), 'emaki.style false: no stylesheet tag');
+	}
+
+	public function testSwitchedOffPrintsNothing(): void
+	{
+		$this->app(['emaki.active' => false]);
+		expect('', trim(snippet('emaki', [], true)), 'emaki off: nothing');
+	}
+
+	public function testTagsArePrintedOnceAndLabelsAreEnglish(): void
+	{
+		$kirby = $this->app(['emaki.active' => true]);
+		$tags  = snippet('emaki', [], true);
+
+		expect(1, substr_count($tags, '<link rel="stylesheet"'), 'one stylesheet');
+		expect(1, substr_count($tags, '<script src='), 'one script');
+		holds(str_contains($tags, ' defer'), 'script deferred');
+		holds(str_contains($tags, 'data-dialog="Image {n} of {count}"'), 'English labels by default');
+		expect('', trim(snippet('emaki', [], true)), 'the tags are printed once per page');
+		holds(preg_match('~^https?://[^/]+/media/plugins/sayamaapps/emaki/[^/]+-\d+/emaki\.js$~', (string)emaki_asset_url('emaki.js')) === 1, 'asset URL: /media/plugins/sayamaapps/emaki/<hash>-<time>/emaki.js on the site, no query string');
+	}
+
+	public function testTextsAndLanguageReachTheScriptTag(): void
+	{
+		$this->app(['emaki.active' => true, 'emaki.texts' => ['button.close' => 'Zumachen']]);
+		holds(str_contains(snippet('emaki', [], true), 'data-close="Zumachen"'), 'emaki.texts reaches the script tag');
+
+		$this->app(['emaki.active' => true, 'emaki.language' => 'de']);
+		$german = snippet('emaki', [], true);
+		holds(str_contains($german, 'data-close="Schließen"') && str_contains($german, 'data-dialog="Bild {n} von {count}"'), 'German labels in the script tag');
 	}
 
 	public function testUnwritableMediaFolderLeavesImagesOut(): void
@@ -359,29 +454,16 @@ final class KirbyTest extends PluginTestCase
 		}
 	}
 
-	public function testNoInlineStyleOrScriptInOutput(): void
+	/** The same JPEG with an APP1 Exif block saying orientation 6: stored landscape, shown portrait. */
+	private static function withOrientation6(string $jpeg): string
 	{
-		$kirby   = $this->app(['emaki.active' => true]);
-		$outputs = [
-			snippet('emaki/gallery', ['files' => $kirby->page('home')->files(), 'attrs' => ['id' => 'g1']], true),
-			snippet('emaki/gallery', ['files' => [$this->file($kirby, 'hostile.png')]], true),
-			snippet('emaki', [], true),
-		];
+		$tiff = "II*\0" . pack('V', 8)                              // little endian, first IFD at offset 8
+			. pack('v', 1)                                          // one entry
+			. pack('vvV', 0x0112, 3, 1) . pack('v', 6) . "\0\0"    // Orientation, SHORT, one value: 6
+			. pack('V', 0);                                         // no further IFD
+		$payload = "Exif\0\0" . $tiff;
 
-		$kirby     = $this->app(['emaki.active' => true, 'emaki.language' => 'de']);
-		$outputs[] = snippet('emaki', [], true);
-
-		foreach ($outputs as $output) {
-			expect(null, self::inlineCode($output), 'no inline style or script');
-		}
-	}
-
-	/** Each original file's hash is still the one it had when it was written. */
-	private function assertOriginalsUnchanged(): void
-	{
-		foreach ($this->originals as $path => $hash) {
-			expect($hash, hash_file('sha256', $path), 'original unchanged: ' . basename($path));
-		}
+		return substr($jpeg, 0, 2) . "\xFF\xE1" . pack('n', strlen($payload) + 2) . $payload . substr($jpeg, 2);
 	}
 
 	/** Writes the test page's originals and records their hashes. */
@@ -412,87 +494,5 @@ final class KirbyTest extends PluginTestCase
 			$this->originals[$path] = hash_file('sha256', $path);
 		}
 		$this->assertCount(8, $this->originals, 'eight originals written');
-	}
-
-	/** The content folder of the test page, with its trailing slash. */
-	private function home(): string
-	{
-		return $this->site . '/content/home/';
-	}
-
-	/** A new Kirby instance over the throwaway site. Becomes the current instance. */
-	private function app(array $options = []): App
-	{
-		Snippet::$cache = []; // Kirby remembers snippet paths per process
-
-		return new App([
-			'roots' => [
-				'index'   => $this->site . '/public',
-				'content' => $this->site . '/content',
-				'site'    => $this->site . '/site',
-				'storage' => $this->site . '/storage',
-				'media'   => $this->site . '/public/media',
-			],
-			'options' => ['url' => 'https://site.example'] + $options,
-		]);
-	}
-
-	/** A file of the test page, by name. */
-	private function file(App $kirby, string $name): mixed
-	{
-		return $kirby->page('home')->file($name);
-	}
-
-	/** The file on disk behind an address of the site. */
-	private function onDisk(string $url): string
-	{
-		return $this->site . '/public' . parse_url($url, PHP_URL_PATH);
-	}
-
-	/** A picture with a sky, a sun and a meadow, saved in the format of the path's extension. */
-	private static function makeImage(string $path, int $width, int $height): void
-	{
-		$im = imagecreatetruecolor($width, $height);
-		imagefilledrectangle($im, 0, 0, $width, $height, imagecolorallocate($im, 30, 90, 140));
-		imagefilledellipse($im, (int)($width * 0.7), (int)($height * 0.4), (int)($width * 0.3), (int)($height * 0.3), imagecolorallocate($im, 240, 200, 60));
-		imagefilledrectangle($im, 0, (int)($height * 0.75), $width, $height, imagecolorallocate($im, 60, 140, 70));
-
-		match (pathinfo($path, PATHINFO_EXTENSION)) {
-			'jpg'  => imagejpeg($im, $path, 90),
-			'png'  => imagepng($im, $path),
-			'webp' => imagewebp($im, $path, 90),
-		};
-	}
-
-	/** The same JPEG with an APP1 Exif block saying orientation 6: stored landscape, shown portrait. */
-	private static function withOrientation6(string $jpeg): string
-	{
-		$tiff = "II*\0" . pack('V', 8)                              // little endian, first IFD at offset 8
-			. pack('v', 1)                                          // one entry
-			. pack('vvV', 0x0112, 3, 1) . pack('v', 6) . "\0\0"    // Orientation, SHORT, one value: 6
-			. pack('V', 0);                                         // no further IFD
-		$payload = "Exif\0\0" . $tiff;
-
-		return substr($jpeg, 0, 2) . "\xFF\xE1" . pack('n', strlen($payload) + 2) . $payload . substr($jpeg, 2);
-	}
-
-	/** The widths of a srcset, in order. @return int[] */
-	private static function srcsetWidths(string $set): array
-	{
-		preg_match_all('/\s(\d+)w(?=,|$)/', $set, $m);
-
-		return array_map('intval', $m[1]);
-	}
-
-	/** Inline style or script anywhere in an output: a Content Security Policy problem. */
-	private static function inlineCode(string $html): string|null
-	{
-		foreach (['~<style\b~i', '~<script\b(?![^>]*\ssrc=)~i', '~\sstyle\s*=~i', '~\son[a-z]+\s*=~i'] as $pattern) {
-			if (preg_match($pattern, $html, $hit) === 1) {
-				return $hit[0];
-			}
-		}
-
-		return null;
 	}
 }

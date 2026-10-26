@@ -32,18 +32,14 @@ final class I18nTest extends PluginTestCase
 		}
 	}
 
-	public function testOldKeysCarryTheSameTexts(): void
+	public function testInvalidOverridesAreIgnored(): void
 	{
-		$translations = require dirname(__DIR__) . '/config/translations.php';
+		new App(['options' => []]);
 
-		foreach (I18n::LANGUAGES as $language) {
-			foreach ($translations[$language] as $key => $text) {
-				if (str_starts_with($key, 'sayamaapps.emaki.')) {
-					$old = str_replace('sayamaapps.emaki.', 'emaki.', $key);
-					$this->assertSame($text, $translations[$language][$old] ?? null, "$language: the 1.x key of $key");
-				}
-			}
-		}
+		I18n::setLanguage('de');
+		I18n::setOverrides('not an array');
+
+		$this->assertSame('Schließen', I18n::labels()['close'], 'invalid overrides are ignored');
 	}
 
 	public function testLabelsAreReadFromKirbyTranslations(): void
@@ -58,6 +54,20 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('Bild {n} von {count}', I18n::labels()['dialog'], 'the placeholders stay for the script');
 	}
 
+	public function testOldKeysCarryTheSameTexts(): void
+	{
+		$translations = require dirname(__DIR__) . '/config/translations.php';
+
+		foreach (I18n::LANGUAGES as $language) {
+			foreach ($translations[$language] as $key => $text) {
+				if (str_starts_with($key, 'sayamaapps.emaki.')) {
+					$old = str_replace('sayamaapps.emaki.', 'emaki.', $key);
+					$this->assertSame($text, $translations[$language][$old] ?? null, "$language: the 1.x key of $key");
+				}
+			}
+		}
+	}
+
 	public function testOverridesApplyFlatAndPerLanguage(): void
 	{
 		new App(['options' => []]);
@@ -69,16 +79,6 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('Zu', $labels['close'], 'flat override applies');
 		$this->assertSame('Weiter', $labels['next'], 'language override applies');
 		$this->assertSame('Vorheriges Bild', $labels['prev'], 'other language override is ignored');
-	}
-
-	public function testInvalidOverridesAreIgnored(): void
-	{
-		new App(['options' => []]);
-
-		I18n::setLanguage('de');
-		I18n::setOverrides('not an array');
-
-		$this->assertSame('Schließen', I18n::labels()['close'], 'invalid overrides are ignored');
 	}
 
 	public function testUnknownLanguageFallsBackToEnglish(): void
