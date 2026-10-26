@@ -151,7 +151,7 @@ return [
 ];
 ```
 
-Override labels with `texts`: flat for all languages (`'sayamaapps.emaki.texts' => ['button.close' => 'Done']`) or per language. Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too; the labels are also Kirby translations as `emaki.<key>`.
+Override labels with `texts`: flat for all languages (`'sayamaapps.emaki.texts' => ['button.close' => 'Done']`) or per language. Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too. The labels are Kirby translations as `sayamaapps.emaki.<key>`.
 
 ## Snippets and functions
 
@@ -170,6 +170,7 @@ Nothing is removed before the next major version. Both forms below work now and 
 | Older name | Use instead |
 |---|---|
 | Option `emaki.<name>` | `sayamaapps.emaki.<name>` (the new name wins when both are set) |
+| Translation key `emaki.<key>` | `sayamaapps.emaki.<key>`. The old key stays registered with the same text, but the viewer reads the new one: a site's own translation of the old key does not reach the viewer, so use `texts` or the new key. |
 | `emaki_option($key, $default)` | `Sayamaapps\Emaki\Options::get(App::instance(), $key, $default)` |
 | `emaki_tags()` | `Sayamaapps\Emaki\Viewer::tags(App::instance())` |
 | `emaki_i18n()` | `Sayamaapps\Emaki\Viewer::prepare(App::instance())` |
