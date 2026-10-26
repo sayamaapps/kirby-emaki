@@ -2,7 +2,6 @@
 
 use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
 use Sayamaapps\Emaki\Options;
 
 /**
@@ -10,7 +9,7 @@ use Sayamaapps\Emaki\Options;
  * as fallback. The fallback is reported as a deprecation in debug mode.
  */
 #[CoversClass(Options::class)]
-final class OptionsTest extends TestCase
+final class OptionsTest extends PluginTestCase
 {
 	public function testNewSpellingIsNotReported(): void
 	{

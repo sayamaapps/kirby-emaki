@@ -2,7 +2,6 @@
 
 use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversNothing;
-use PHPUnit\Framework\TestCase;
 use Sayamaapps\Emaki\Images;
 use Sayamaapps\Emaki\Options;
 use Sayamaapps\Emaki\Viewer;
@@ -12,7 +11,7 @@ use Sayamaapps\Emaki\Viewer;
  * and the old functions delegate to them and report a deprecation in debug mode.
  */
 #[CoversNothing]
-final class LegacyTest extends TestCase
+final class LegacyTest extends PluginTestCase
 {
 	public function testOldClassNamesAreAliasesOfTheNewClasses(): void
 	{
