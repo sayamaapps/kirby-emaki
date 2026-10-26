@@ -14,7 +14,7 @@ use Kirby\Cms\App;
  * @copyright Simon Räder
  * @license   https://opensource.org/licenses/MIT
  */
-final class Presets
+class Presets
 {
 	/**
 	 * The usable widths of one list, in Kirby's spellings:

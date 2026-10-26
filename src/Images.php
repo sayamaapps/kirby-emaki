@@ -17,7 +17,7 @@ use Kirby\Image\Image;
  * @copyright Simon Räder
  * @license   https://opensource.org/licenses/MIT
  */
-final class Images
+class Images
 {
 	/** The tile `src` is the smallest tile variant at least this wide (px), else the largest. */
 	private const SRC_FROM = 720;

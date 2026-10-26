@@ -23,7 +23,7 @@ use Kirby\Cms\Helpers;
  * @copyright Simon Räder
  * @license   https://opensource.org/licenses/MIT
  */
-final class Options
+class Options
 {
 	/** Widths for the large view when no `thumbs.srcsets` preset is configured; never above the file's width. */
 	public const LARGE_WIDTHS = [800, 1200, 1800, 2400];

@@ -15,7 +15,7 @@ use WeakMap;
  * @copyright Simon Räder
  * @license   https://opensource.org/licenses/MIT
  */
-final class Viewer
+class Viewer
 {
 	/**
 	 * Address of a file in assets/: /media/plugins/sayamaapps/emaki/<hash>-<time>/<file>, no query string.
