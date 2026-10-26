@@ -136,7 +136,11 @@ final class KirbyTest extends PluginTestCase
 		$wide  = $this->file($kirby, 'wide.jpg');
 		$a     = Images::attributes($wide);
 
-		expect(['href', 'data-srcset', 'data-sizes', 'src', 'srcset', 'sizes', 'width', 'height', 'alt', 'loading', 'decoding'], array_keys($a), 'every key of §2.3, in this order');
+		expect(
+			['href', 'data-srcset', 'data-sizes', 'src', 'srcset', 'sizes', 'width', 'height', 'alt', 'loading', 'decoding'],
+			array_keys($a),
+			'every key of §2.3, in this order'
+		);
 		holds(str_starts_with($a['href'], 'https://site.example/media/'), 'href is an address of the site');
 		holds($a['href'] !== $wide->url(), 'href is a rendered variant, never the original');
 		expect(1, preg_match('~/wide-2400x\.jpg$~', $a['href']), 'href: the largest large variant (2400 px)');
@@ -180,9 +184,15 @@ final class KirbyTest extends PluginTestCase
 		$opt = snippet('emaki/gallery', [
 			'files' => $page->files(), 'class' => 'row extra', 'tag' => 'section', 'sizes' => '50vw',
 			'image' => 'slug', 'caption' => 'caption',
-			'attrs' => ['id' => 'g1', 'data-track' => 'hero', 'aria-label' => 'Gallery', 'onclick' => 'evil()', 'style' => 'color:red', 'class' => 'spoof', 'data-emaki' => 'spoof', 'role' => 'list'],
+			'attrs' => [
+				'id' => 'g1', 'data-track' => 'hero', 'aria-label' => 'Gallery', 'onclick' => 'evil()',
+				'style' => 'color:red', 'class' => 'spoof', 'data-emaki' => 'spoof', 'role' => 'list',
+			],
 		], true);
-		holds(preg_match('~^<section class="emaki-gallery row extra" data-emaki id="g1" data-track="hero" aria-label="Gallery">\n~', $opt) === 1, 'class, tag and $attrs: container tag');
+		holds(
+			preg_match('~^<section class="emaki-gallery row extra" data-emaki id="g1" data-track="hero" aria-label="Gallery">\n~', $opt) === 1,
+			'class, tag and $attrs: container tag'
+		);
 		holds(preg_match('~onclick|style=|spoof|role=~', $opt) === 0, '$attrs: other attributes dropped');
 		expect(1, preg_match_all('~ data-emaki(?=[\s>])~', $opt), 'exactly one data-emaki, on the container');
 		expect(1, preg_match('~data-emaki-image="courtyard"~', $opt), '$image: the slug field becomes data-emaki-image');
@@ -348,7 +358,8 @@ final class KirbyTest extends PluginTestCase
 		expect(1, preg_match('~\.webp$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null per call: emaki.format applies');
 
 		$kirby = $this->app(['emaki.active' => true, 'thumbs' => ['format' => 'jpg']]);
-		expect(1, preg_match('~\.jpg$~', Images::attributes($this->file($kirby, 'flat.png'), ['format' => null])['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
+		$fromSite = Images::attributes($this->file($kirby, 'flat.png'), ['format' => null]);
+		expect(1, preg_match('~\.jpg$~', $fromSite['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
 	}
 
 	public function testStyleOptionOmitsTheStylesheet(): void
@@ -373,7 +384,10 @@ final class KirbyTest extends PluginTestCase
 		holds(str_contains($tags, ' defer'), 'script deferred');
 		holds(str_contains($tags, 'data-dialog="Image {n} of {count}"'), 'English labels by default');
 		expect('', trim(snippet('emaki', [], true)), 'the tags are printed once per page');
-		holds(preg_match('~^https?://[^/]+/media/plugins/sayamaapps/emaki/[^/]+-\d+/emaki\.js$~', (string)emaki_asset_url('emaki.js')) === 1, 'asset URL: /media/plugins/sayamaapps/emaki/<hash>-<time>/emaki.js on the site, no query string');
+		holds(
+			preg_match('~^https?://[^/]+/media/plugins/sayamaapps/emaki/[^/]+-\d+/emaki\.js$~', (string)emaki_asset_url('emaki.js')) === 1,
+			'asset URL: /media/plugins/sayamaapps/emaki/<hash>-<time>/emaki.js on the site, no query string'
+		);
 	}
 
 	public function testTextsAndLanguageReachTheScriptTag(): void
@@ -448,7 +462,8 @@ final class KirbyTest extends PluginTestCase
 	<?php endif ?>
 	PHP);
 			expect('', trim(snippet('readme-emaki', ['file' => $noThumb], true)), 'README pattern: no thumbs, no output, no error');
-			holds(str_contains(snippet('readme-emaki', ['file' => $this->file($kirby, 'flat.png')], true), '<div data-emaki>'), 'README pattern: with thumbs the container is printed');
+			$withThumbs = snippet('readme-emaki', ['file' => $this->file($kirby, 'flat.png')], true);
+			holds(str_contains($withThumbs, '<div data-emaki>'), 'README pattern: with thumbs the container is printed');
 		} finally {
 			chmod($pageMedia, 0755);
 		}
@@ -477,7 +492,11 @@ final class KirbyTest extends PluginTestCase
 		self::makeImage($home . 'hostile.png', 300, 200);
 		self::makeImage($home . 'turned.jpg', 1600, 1000);
 		file_put_contents($home . 'turned.jpg', self::withOrientation6(file_get_contents($home . 'turned.jpg')));
-		file_put_contents($home . 'logo.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100"><rect width="200" height="100" fill="#1d5c8c"/></svg>');
+		file_put_contents(
+			$home . 'logo.svg',
+			'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">'
+			. '<rect width="200" height="100" fill="#1d5c8c"/></svg>'
+		);
 		file_put_contents($home . 'notes.pdf', "%PDF-1.4\n%%EOF\n");
 		file_put_contents($home . 'wide.jpg.txt', "Alt: Our courtyard\n\n----\n\nCaption: Courtyard caption\n\n----\n\nSlug: courtyard\n");
 		file_put_contents($home . 'modern.webp.txt', "Alt: Web picture\n");
