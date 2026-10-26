@@ -1,3 +1,5 @@
+> **Namen seit dem Umbau:** Klassen `Sayamaapps\Emaki\*`, Optionen `sayamaapps.emaki.*` (älterer Schlüssel `emaki.*` als Rückfall), Funktionen `emaki_*` sind Wrapper in `legacy.php`. Die Liste unten nennt die älteren Namen.
+
 # Emaki — specification v1
 
 Emaki (絵巻, the picture scroll) is an image viewer for Kirby 5 galleries

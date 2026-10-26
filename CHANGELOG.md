@@ -11,6 +11,12 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Changed
+
+- **Structure.** Classes live in `Sayamaapps\Emaki\` behind a class map; `index.php` only registers the plugin. Behaviour is unchanged.
+- **Options** are read as `sayamaapps.emaki.<name>`. The older `emaki.<name>` still works and reports a deprecation in debug mode.
+- **Functions** `emaki_option()`, `emaki_i18n()`, `emaki_asset_url()`, `emaki_tags()` and `emaki_attributes()` are wrappers now; the old class names `Emaki\*` are aliases. Both are removed in the next major version. See the README, Deprecations.
+
 ### Removed
 
 - **`DATENSCHUTZ.md` and `PRIVACY.md`.** Emaki processes no visitor data, so it has no place in a site's privacy policy. The README says so under "Privacy".

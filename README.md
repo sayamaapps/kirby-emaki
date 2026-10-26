@@ -2,6 +2,8 @@
 
 Image viewer for [Kirby CMS](https://getkirby.com) 5: a dependency-free lightbox with `srcset` gallery tiles.
 
+**Versions:** Kirby 5 · PHP 8.2 to 8.5 · MIT · [Changes](CHANGELOG.md)
+
 Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after another in a native `<dialog>`. Served from your own server, it uses no CDN, no inline code and no cookies. It styles only the viewer; the gallery grid is yours.
 
 ## Features
@@ -15,24 +17,39 @@ Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after a
 
 ## Requirements
 
-- PHP 8.2–8.4 and Kirby 5.
+- Kirby 5 (`getkirby/cms` 5.0 or newer)
+- PHP 8.2, 8.3, 8.4 or 8.5
 - A browser with the `<dialog>` element. Without it, links open the image.
 
 ## Installation
+
+Pick one of three ways. The plugin always ends up in `site/plugins/emaki/`.
+
+**Composer** (the plugin goes to `vendor/` and is linked into `site/plugins/`):
 
 ```sh
 composer require sayamaapps/kirby-emaki
 ```
 
-Composer installs to `site/plugins/emaki/`. Add that path to `.gitignore` and deploy it like `vendor/`.
+Add `site/plugins/emaki/` to `.gitignore` and deploy it like `vendor/`.
+
+**ZIP:** download the release archive from the [releases page](https://github.com/sayamaapps/kirby-emaki/releases), unpack it and copy the folder to `site/plugins/emaki/`.
+
+**Git submodule:**
+
+```sh
+git submodule add https://github.com/sayamaapps/kirby-emaki.git site/plugins/emaki
+```
 
 ## Usage
+
+### Setup
 
 Switch Emaki on in `site/config/config.php` (off by default):
 
 ```php
 return [
-    'emaki.active' => true,
+    'sayamaapps.emaki.active' => true,
 ];
 ```
 
@@ -66,6 +83,8 @@ Optional link attributes: `data-srcset` and `data-sizes` (large view), `data-ema
 
 `$file->emaki(array $options = [])` returns the attributes of one tile and its large view, or `null` when no thumb can be made. The `<a>` keys are `href`, `data-srcset` and `data-sizes`; the `<img>` keys are `src`, `srcset`, `sizes`, `width`, `height`, `alt`, `loading` and `decoding`. `href` is the largest large view. `src` is the smallest tile at least 720 px wide, or the largest tile. A file Kirby cannot resize (SVG) keeps its own URL and has no `srcset`. Add the caption and image name yourself.
 
+Options per call: `large` and `tile` (a `thumbs.srcsets` preset name or a list of widths), `sizes`, `format` and `quality`. The call value wins over the option of the same name.
+
 Kirby creates the thumbs on the first render: up to eight per image by default. After a deploy that empties the media folder, load the gallery pages once, or configure fewer widths. If a thumb cannot be written, the gallery leaves that image out with an HTML comment, and `$file->emaki()` returns `null`. A resizable image never falls back to its original.
 
 ### Counting
@@ -92,33 +111,25 @@ Set the colour tokens on `:root`, or on any ancestor of the dialog:
 
 Emaki styles `.emaki` (the dialog) and its parts: `.emaki-stage`, `.emaki-image`, `.emaki-caption`, `.emaki-counter`, `.emaki-close`, `.emaki-prev` and `.emaki-next`. States: `.emaki--motion` (animation, only without reduced motion) and `.is-loading` (while an image loads).
 
-### Functions
-
-- `emaki_tags()`: the viewer's `<link>` and `<script>`, once per page; empty while Emaki is off.
-- `emaki_attributes(File $file, array $options = [])`: the same array as `$file->emaki()`.
-- `emaki_option(string $key, mixed $default = null)`: the value of `emaki.<key>`.
-- `emaki_asset_url(string $file)`: URL of a file in `assets/`, as `/media/plugins/sayamaapps/emaki/<hash>-<time>/<file>`, with no query string.
-- `emaki_i18n()`: sets the language and label overrides for the request.
-
 ## Options
 
-Config options are read as `emaki.<name>`, flat or nested; `null` means "not set". Scope: `config` for `emaki.*`, `call` for `$file->emaki()`, `gallery` for snippet variables.
+Options are read as `sayamaapps.emaki.<name>`, flat or nested; `null` means "not set". The older spelling `emaki.<name>` still works as a fallback until the next major version, see [Deprecations](#deprecations). Scope: `config` for the site config, `call` for `$file->emaki()`, `gallery` for snippet variables.
 
 | Option | Scope | Default | Meaning |
 |---|---|---|---|
 | `active` | config | `false` | Master switch; only `true` turns Emaki on. Off: no tags, plain gallery links, `$file->emaki()` still works. |
 | `language` | config | request, default language, `locale`, then `en` | Label language, `en` or `de`. |
 | `texts` | config | none | Label overrides, flat or per language (keys below). |
-| `script` | config | `true` | `false` omits the `<script>` from `emaki_tags()`, for sites that bundle `emaki.js`. |
+| `script` | config | `true` | `false` omits the `<script>` from the tags, for sites that bundle `emaki.js`. |
 | `style` | config | `true` | `false` omits the `<link>`, for sites that bundle `emaki.css`. |
 | `srcset` | config | `'emaki'` | Large-view widths: a `thumbs.srcsets` preset or a list. Without a preset: 800, 1200, 1800, 2400. |
 | `thumbnail` | config | `'emaki-tile'` | Tile widths, same rules. Without a preset: 320, 480, 720, 960. |
 | `sizes` | config | `'100vw'` | `sizes` of the large view, written as `data-sizes`. |
-| `format` | config, call | `null` | Thumb format, such as `webp`. A call value wins over `emaki.format`; `null` uses Kirby's `thumbs.format`, else the file's own format. |
-| `quality` | config, call | `null` | Thumb quality. A call value wins over `emaki.quality`; `null` uses Kirby's `thumbs.quality`. |
-| `large` | call | `emaki.srcset` | Large-view preset or widths for this call. |
-| `tile` | call | `emaki.thumbnail` | Tile preset or widths for this call. |
-| `sizes` | call, gallery | `'(max-width: 40rem) 100vw, 33vw'` | `sizes` of the tile `<img>`, not the large view (`emaki.sizes`). |
+| `format` | config, call | `null` | Thumb format, such as `webp`. A call value wins; `null` uses Kirby's `thumbs.format`, else the file's own format. |
+| `quality` | config, call | `null` | Thumb quality. A call value wins; `null` uses Kirby's `thumbs.quality`. |
+| `large` | call | `srcset` option | Large-view preset or widths for this call. |
+| `tile` | call | `thumbnail` option | Tile preset or widths for this call. |
+| `sizes` | call, gallery | `'(max-width: 40rem) 100vw, 33vw'` | `sizes` of the tile `<img>`, not the large view (the `sizes` option). |
 | `files` | gallery | none | Files or any iterable; non-images are skipped. |
 | `caption` | gallery | `'alt'` | `'alt'`: the alt text. A field name: that field's value. `false`: none (empty `data-emaki-caption`). |
 | `image` | gallery | none | File field whose value becomes `data-emaki-image`, for counting. |
@@ -128,7 +139,43 @@ Config options are read as `emaki.<name>`, flat or nested; `null` means "not set
 
 A preset entry contributes only its width; its `quality` and `format` are ignored, and the options apply.
 
-Override labels with `texts`: flat for all languages (`'emaki.texts' => ['button.close' => 'Done']`) or per language (`'emaki.texts' => ['de' => ['button.close' => 'Schließen']]`). Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too; the labels are also Kirby translations as `emaki.<key>`.
+Example:
+
+```php
+return [
+    'sayamaapps.emaki.active'    => true,
+    'sayamaapps.emaki.language'  => 'de',
+    'sayamaapps.emaki.srcset'    => 'emaki',
+    'sayamaapps.emaki.format'    => 'webp',
+    'sayamaapps.emaki.texts'     => ['de' => ['button.close' => 'Schließen']],
+];
+```
+
+Override labels with `texts`: flat for all languages (`'sayamaapps.emaki.texts' => ['button.close' => 'Done']`) or per language. Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too; the labels are also Kirby translations as `emaki.<key>`.
+
+## Snippets and functions
+
+| Name | Use |
+|---|---|
+| `snippet('emaki')` | The viewer's `<link>` and `<script>`, once per page; prints nothing while Emaki is off. |
+| `snippet('emaki/gallery', [...])` | A container with one tile per image. Variables: see Options (gallery scope). |
+| `$file->emaki([...])` | The attributes of one tile and its large view, or `null`. |
+
+A site that needs its own markup creates `site/snippets/emaki/gallery.php`; Kirby uses that file instead of Emaki's.
+
+## Deprecations
+
+Nothing is removed before the next major version. Both forms below work now and report a deprecation in Kirby's debug mode.
+
+| Older name | Use instead |
+|---|---|
+| Option `emaki.<name>` | `sayamaapps.emaki.<name>` (the new name wins when both are set) |
+| `emaki_option($key, $default)` | `Sayamaapps\Emaki\Options::get(App::instance(), $key, $default)` |
+| `emaki_tags()` | `Sayamaapps\Emaki\Viewer::tags(App::instance())` |
+| `emaki_i18n()` | `Sayamaapps\Emaki\Viewer::prepare(App::instance())` |
+| `emaki_asset_url($file)` | `Sayamaapps\Emaki\Viewer::assetUrl(App::instance(), $file)` |
+| `emaki_attributes($file, $options)` | `Sayamaapps\Emaki\Images::attributes($file, $options)` |
+| Classes `Emaki\Images`, `Emaki\I18n`, `Emaki\Options`, `Emaki\Presets` | the same names in `Sayamaapps\Emaki\` (aliases) |
 
 ## Privacy
 
@@ -136,8 +183,8 @@ Emaki processes no visitor data: no cookies, no browser storage, no tracking. It
 
 ## Maintenance
 
-Tests: `composer test` (PHP) and `npm run test:web` (browser). Issues and pull requests are welcome, without a support promise. Report security problems privately through GitHub's vulnerability reporting. Changes: [CHANGELOG.md](CHANGELOG.md).
+Tests: `composer test` (PHP) and `npm ci && npm run test:web` (browser). Checks: see [CONTRIBUTING](.github/CONTRIBUTING.md). Issues and pull requests are welcome, without a support promise. Report security problems privately through GitHub's vulnerability reporting ([SECURITY](.github/SECURITY.md)).
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE.md](LICENSE.md).
