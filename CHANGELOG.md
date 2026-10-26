@@ -16,7 +16,7 @@ All notable changes to this project are documented here. Versions follow
 - **Structure.** Classes live in `Sayamaapps\Emaki\` behind a class map; `index.php` only registers the plugin. Behaviour is unchanged.
 - **Options** are read as `sayamaapps.emaki.<name>`. The older `emaki.<name>` still works and reports a deprecation in debug mode.
 - **Functions** `emaki_option()`, `emaki_i18n()`, `emaki_asset_url()`, `emaki_tags()` and `emaki_attributes()` are wrappers now; the old class names `Emaki\*` are aliases. Both are removed in the next major version. See the README, Deprecations.
-- **Labels** are Kirby translations `sayamaapps.emaki.<key>`. The old keys `emaki.<key>` stay registered with the same texts. `Emaki\I18n::t()` and `table()` are gone; they were internal and not in the README.
+- **Labels** are Kirby translations `sayamaapps.emaki.<key>`. The old keys `emaki.<key>` stay registered with the same texts. `Emaki\I18n::t()` and `table()` stay as wrappers over the same texts and report a deprecation; they are removed in the next major version.
 
 ### Removed
 

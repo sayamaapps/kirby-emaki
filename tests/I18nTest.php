@@ -68,6 +68,36 @@ final class I18nTest extends PluginTestCase
 		}
 	}
 
+	public function testOldTextMethodsKeepTheirTextsAndAreDeprecated(): void
+	{
+		$deprecations = [];
+		set_error_handler(
+			function (int $level, string $message) use (&$deprecations): bool {
+				$deprecations[] = $message;
+				return true;
+			},
+			E_USER_DEPRECATED
+		);
+
+		try {
+			new App(['options' => ['debug' => true]]);
+
+			I18n::setLanguage('de');
+			I18n::setOverrides(null);
+
+			$this->assertSame('Bild 3 von 7', I18n::t('dialog', ['n' => 3, 'count' => 7]), 'placeholders filled');
+			$this->assertSame('Schließen', I18n::t('button.close'), 'German label from the table');
+			$this->assertSame('nope', I18n::t('nope'), 'unknown key falls back to the key');
+			$this->assertSame('Schließen', I18n::table('de')['button.close'], 'table keys have no prefix');
+			$this->assertSame([], I18n::table('fr'), 'unknown language: empty table');
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertCount(5, $deprecations, 't() and table() report a deprecation on every call');
+		$this->assertStringContainsString('Emaki\\I18n::t() is deprecated', $deprecations[0]);
+	}
+
 	public function testOverridesApplyFlatAndPerLanguage(): void
 	{
 		new App(['options' => []]);

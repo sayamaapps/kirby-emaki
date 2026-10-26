@@ -2,6 +2,7 @@
 
 namespace Sayamaapps\Emaki;
 
+use Kirby\Cms\Helpers;
 use Kirby\Toolkit\I18n as KirbyI18n;
 
 /**
@@ -27,7 +28,7 @@ use Kirby\Toolkit\I18n as KirbyI18n;
  * @copyright Simon Räder
  * @license   https://opensource.org/licenses/MIT
  */
-final class I18n
+class I18n
 {
 	/** Languages Emaki ships. English is the default and the fallback. */
 	public const LANGUAGES = ['en', 'de'];
@@ -102,5 +103,67 @@ final class I18n
 				}
 			}
 		}
+	}
+
+	/**
+	 * One label with its `{name}` placeholders replaced by the given values, unescaped.
+	 *
+	 * Reads the 1.x tables (translations/<language>.php), in the order of 1.x:
+	 * the `texts` override, the current language, English, the key itself.
+	 *
+	 * @deprecated Use Kirby's translations: I18n::translate('sayamaapps.emaki.<key>').
+	 * @param array<string,mixed> $values
+	 */
+	public static function t(string $key, array $values = []): string
+	{
+		Helpers::deprecated(
+			'Emaki\\I18n::t() is deprecated, use Kirby\'s I18n::translate() with the key sayamaapps.emaki.<key>',
+			'emaki-i18n'
+		);
+
+		$text = self::$overrides[$key]
+			?? self::texts(self::$language)[$key]
+			?? self::texts('en')[$key]
+			?? $key;
+		foreach ($values as $name => $value) {
+			$text = str_replace('{' . $name . '}', (string)$value, $text);
+		}
+		return $text;
+	}
+
+	/**
+	 * The 1.x table of one language: keys without the `sayamaapps.emaki.` prefix. Unknown languages give an empty table.
+	 *
+	 * @deprecated Use Kirby's translations: I18n::translate('sayamaapps.emaki.<key>').
+	 * @return array<string,string>
+	 */
+	public static function table(string $language): array
+	{
+		Helpers::deprecated(
+			'Emaki\\I18n::table() is deprecated, use Kirby\'s I18n::translate() with the key sayamaapps.emaki.<key>',
+			'emaki-i18n'
+		);
+
+		return self::texts($language);
+	}
+
+	/**
+	 * The text table of a language, keys without the prefix. No deprecation: t() and table() share it.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function texts(string $language): array
+	{
+		if (in_array($language, self::LANGUAGES, true) === false) {
+			return [];
+		}
+
+		/** @var array<string,string> $labels */
+		$labels = require dirname(__DIR__) . '/translations/' . $language . '.php';
+		$table = [];
+		foreach ($labels as $key => $text) {
+			$table[str_replace('sayamaapps.emaki.', '', $key)] = $text;
+		}
+		return $table;
 	}
 }

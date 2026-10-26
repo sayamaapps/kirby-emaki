@@ -176,6 +176,8 @@ Nothing is removed before the next major version. Both forms below work now and 
 | `emaki_i18n()` | `Sayamaapps\Emaki\Viewer::prepare(App::instance())` |
 | `emaki_asset_url($file)` | `Sayamaapps\Emaki\Viewer::assetUrl(App::instance(), $file)` |
 | `emaki_attributes($file, $options)` | `Sayamaapps\Emaki\Images::attributes($file, $options)` |
+| `Emaki\I18n::t($key, $values)` | Kirby's translations: `I18n::translate('sayamaapps.emaki.<key>')`, with the placeholders filled in by the site |
+| `Emaki\I18n::table($language)` | Kirby's translations: `I18n::translate('sayamaapps.emaki.<key>')` |
 | Classes `Emaki\Images`, `Emaki\I18n`, `Emaki\Options`, `Emaki\Presets` | the same names in `Sayamaapps\Emaki\` (aliases) |
 
 ## Privacy
