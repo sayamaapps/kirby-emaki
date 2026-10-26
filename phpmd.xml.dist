@@ -9,21 +9,16 @@
 	<rule ref="rulesets/cleancode.xml">
 		<!-- The helper classes (Options, I18n, Presets, Images, Viewer) are static by design, as in Kirby's own code. -->
 		<exclude name="StaticAccess" />
-		<!-- Public flags such as the `$only` and `$now` snippet variables are part of the public API. -->
-		<exclude name="BooleanArgumentFlag" />
 		<!-- The assignment in a condition keeps the lookup chain in reading order. -->
 		<exclude name="IfStatementAssignment" />
 	</rule>
 
 	<rule ref="rulesets/codesize.xml" />
 
-	<rule ref="rulesets/design.xml">
-		<!-- The option and the image classes are small; the coupling is the Kirby API they call. -->
-		<exclude name="CouplingBetweenObjects" />
-	</rule>
+	<rule ref="rulesets/design.xml" />
 
 	<rule ref="rulesets/naming.xml">
-		<!-- I18n::t() is the translation shorthand used in snippets and tests. -->
+		<!-- I18n::t() is the 1.x name, kept as a deprecated wrapper (README, Deprecations). -->
 		<exclude name="ShortMethodName" />
 	</rule>
 
