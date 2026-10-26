@@ -1,7 +1,8 @@
 <?php
 
 use Kirby\Cms\App;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Sayamaapps\Emaki\I18n;
 use Sayamaapps\Emaki\Images;
 use Sayamaapps\Emaki\Options;
 use Sayamaapps\Emaki\Viewer;
@@ -10,7 +11,10 @@ use Sayamaapps\Emaki\Viewer;
  * The 1.x names still work: the old class names are aliases of the new classes,
  * and the old functions delegate to them and report a deprecation in debug mode.
  */
-#[CoversNothing]
+#[CoversClass(I18n::class)]
+#[CoversClass(Images::class)]
+#[CoversClass(Options::class)]
+#[CoversClass(Viewer::class)]
 final class LegacyTest extends PluginTestCase
 {
 	public function testOldClassNamesAreAliasesOfTheNewClasses(): void

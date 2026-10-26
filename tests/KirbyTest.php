@@ -3,8 +3,8 @@
 /**
  * The plugin with real Kirby, in a throwaway site directory: real GD images
  * (JPEG, PNG, WebP), a JPEG turned by EXIF orientation 6 (a minimal APP1
- * block), an SVG and a PDF. Checks the attributes of SPEC §2.3 and the markup
- * of §3.2 (`emaki/gallery`, `$attrs`, captions, escaping), the `emaki`
+ * block), an SVG and a PDF. Checks the attributes of the tile and its large view
+ * (docs/SPEC.md) and the markup of `emaki/gallery` (`$attrs`, captions, escaping), the `emaki`
  * snippet and its labels, that no output carries inline style or script, and
  * that no original file changed.
  *
@@ -14,10 +14,12 @@
 use Kirby\Cms\App;
 use Kirby\Filesystem\Dir;
 use Kirby\Template\Snippet;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use Sayamaapps\Emaki\Images;
+use Sayamaapps\Emaki\Viewer;
 
-#[CoversNothing]
+#[CoversClass(Images::class)]
+#[CoversClass(Viewer::class)]
 final class KirbyTest extends PluginTestCase
 {
 	/** @var array<string,string> SHA-256 of every original, taken after it was written. */
@@ -139,7 +141,7 @@ final class KirbyTest extends PluginTestCase
 		expect(
 			['href', 'data-srcset', 'data-sizes', 'src', 'srcset', 'sizes', 'width', 'height', 'alt', 'loading', 'decoding'],
 			array_keys($a),
-			'every key of §2.3, in this order'
+			'every key of the tile attributes, in this order'
 		);
 		holds(str_starts_with($a['href'], 'https://site.example/media/'), 'href is an address of the site');
 		holds($a['href'] !== $wide->url(), 'href is a rendered variant, never the original');
@@ -229,7 +231,7 @@ final class KirbyTest extends PluginTestCase
 		$tile = '~<a class="emaki-item" href="[^"]+-2400x\.jpg" data-srcset="[^"]+" data-sizes="100vw" data-emaki-caption="Our courtyard">\n'
 			. '    <img src="[^"]+" srcset="[^"]+" sizes="\(max-width: 40rem\) 100vw, 33vw" width="720" height="480" alt="Our courtyard" loading="lazy" decoding="async">\n'
 			. '  </a>\n~';
-		expect(1, preg_match($tile, $html), 'tile markup of §3.2');
+		expect(1, preg_match($tile, $html), 'tile markup of the gallery snippet');
 
 		$inactive = $this->app([]);
 		$offHtml  = snippet('emaki/gallery', ['files' => $inactive->page('home')->files()], true);

@@ -6,7 +6,6 @@
  * form), the cap at the file's width, the fallbacks and the invalid entries.
  * Kirby's App is replaced by a stand-in that answers `option()` with dotted
  * keys, the one method Emaki reads.
- *   php tests/PresetsTest.php
  */
 
 use Kirby\Cms\App;
