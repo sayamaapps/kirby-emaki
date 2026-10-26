@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Emaki\Presets::widths() without Kirby: both spellings of `thumbs.srcsets`
+ * Sayamaapps\Emaki\Presets::widths() without Kirby: both spellings of `thumbs.srcsets`
  * (a plain list and `width => 'condition'`, plus the `descriptor => [options]`
  * form), the cap at the file's width, the fallbacks and the invalid entries.
  * Kirby's App is replaced by a stand-in that answers `option()` with dotted
@@ -9,11 +9,11 @@
  *   php tests/PresetsTest.php
  */
 
-use Emaki\Options;
-use Emaki\Presets;
 use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sayamaapps\Emaki\Options;
+use Sayamaapps\Emaki\Presets;
 
 #[CoversClass(Presets::class)]
 final class PresetsTest extends TestCase

@@ -1,7 +1,7 @@
 <?php
 /**
  * A gallery: one container (`data-emaki` = one sequence to leaf through),
- * one tile per file, markup as in SPEC.md §3.2. The site styles the grid
+ * one tile per file, markup as documented in the README. The site styles the grid
  * itself (classes emaki-gallery, emaki-item); Emaki only provides the stage.
  * An image Kirby cannot make thumbs for is left out and marked with an HTML
  * comment. No container is printed when no tile is left; the comments stay.
@@ -23,7 +23,7 @@ $class   = is_string($class ?? null) ? trim($class) : '';
 $caption ??= 'alt';
 $image   = is_string($image ?? null) && $image !== '' ? $image : null;
 $options = is_string($sizes ?? null) && $sizes !== '' ? ['sizes' => $sizes] : [];
-$active  = emaki_option('active', false) === true;
+$active  = \Sayamaapps\Emaki\Options::active(\Kirby\Cms\App::instance());
 
 // Every value goes through esc(); a null value leaves the attribute out.
 $attr = static fn (string $name, mixed $value): string => $value === null
@@ -55,7 +55,7 @@ foreach ($files ?? [] as $file) {
 		continue;
 	}
 
-	$tile = \Emaki\Images::attributes($file, $options);
+	$tile = \Sayamaapps\Emaki\Images::attributes($file, $options);
 	if ($tile === null) {
 		// Kirby cannot make the thumbs (media folder not writable): the image is
 		// left out, never linked as the original. The comment keeps the gap visible.

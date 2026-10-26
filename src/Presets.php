@@ -1,12 +1,17 @@
 <?php
 
-namespace Emaki;
+namespace Sayamaapps\Emaki;
 
 use Kirby\Cms\App;
 
 /**
  * Turns a `thumbs.srcsets` preset name (or a plain list of widths) into the
- * widths Emaki renders for one file (SPEC.md §2.4).
+ * widths Emaki renders for one file.
+ *
+ * @author    Simon Räder
+ * @link      https://github.com/sayamaapps/kirby-emaki
+ * @copyright Simon Räder
+ * @license   https://opensource.org/licenses/MIT
  */
 final class Presets
 {

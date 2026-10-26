@@ -136,7 +136,7 @@ final class KirbyTest extends TestCase
 			// 1. The attributes of a wide JPEG (SPEC §2.3).
 			$kirby = $app(['emaki.active' => true]);
 			$wide  = $file($kirby, 'wide.jpg');
-			$a     = Emaki\Images::attributes($wide);
+			$a     = Sayamaapps\Emaki\Images::attributes($wide);
 			expect(['href', 'data-srcset', 'data-sizes', 'src', 'srcset', 'sizes', 'width', 'height', 'alt', 'loading', 'decoding'], array_keys($a), 'every key of §2.3, in this order');
 			holds(str_starts_with($a['href'], 'https://site.example/media/'), 'href is an address of the site');
 			holds($a['href'] !== $wide->url(), 'href is a rendered variant, never the original');
@@ -156,12 +156,12 @@ final class KirbyTest extends TestCase
 			expect('Our courtyard', $a['alt'], 'alt from the file');
 			expect('lazy', $a['loading'], 'loading');
 			expect('async', $a['decoding'], 'decoding');
-			expect('50vw', Emaki\Images::attributes($wide, ['sizes' => '50vw'])['sizes'], 'per call: tile sizes');
-			expect('100vw', Emaki\Images::attributes($wide, ['sizes' => '50vw'])['data-sizes'], 'per call sizes leave data-sizes alone');
-			expect('', Emaki\Images::attributes($file($kirby, 'flat.png'))['alt'], 'no alt in the file: empty string');
+			expect('50vw', Sayamaapps\Emaki\Images::attributes($wide, ['sizes' => '50vw'])['sizes'], 'per call: tile sizes');
+			expect('100vw', Sayamaapps\Emaki\Images::attributes($wide, ['sizes' => '50vw'])['data-sizes'], 'per call sizes leave data-sizes alone');
+			expect('', Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'))['alt'], 'no alt in the file: empty string');
 
 			// Per-call lists instead of presets.
-			$custom = Emaki\Images::attributes($wide, ['large' => [600, 1200], 'tile' => [200, 400]]);
+			$custom = Sayamaapps\Emaki\Images::attributes($wide, ['large' => [600, 1200], 'tile' => [200, 400]]);
 			expect([600, 1200], srcsetWidths($custom['data-srcset']), 'large as a list');
 			expect([200, 400], srcsetWidths($custom['srcset']), 'tile as a list');
 			expect(400, $custom['width'], 'tile list without 720: the largest');
@@ -172,36 +172,36 @@ final class KirbyTest extends TestCase
 
 			// emaki.sizes: the large view's default.
 			$kirby = $app(['emaki.active' => true, 'emaki.sizes' => '80vw']);
-			expect('80vw', Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-sizes'], 'emaki.sizes sets data-sizes');
+			expect('80vw', Sayamaapps\Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-sizes'], 'emaki.sizes sets data-sizes');
 
 			// emaki.format and the per-call format.
 			$kirby = $app(['emaki.active' => true, 'emaki.format' => 'webp']);
-			$fromOption = Emaki\Images::attributes($file($kirby, 'flat.png'));
+			$fromOption = Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'));
 			expect(1, preg_match('~\.webp$~', $fromOption['href']), 'emaki.format: href is webp');
 			expect(IMAGETYPE_WEBP, getimagesize($onDisk($fromOption['href']))[2], 'emaki.format: the file on disk is webp');
 			$kirby = $app(['emaki.active' => true]);
-			$perCall = Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => 'webp']);
+			$perCall = Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => 'webp']);
 			expect(1, preg_match('~\.webp$~', $perCall['href']), 'format per call: href is webp');
 			expect(1, preg_match('~\.webp$~', $perCall['src']), 'format per call: src is webp');
-			expect(1, preg_match('~\.png$~', Emaki\Images::attributes($file($kirby, 'flat.png'))['href']), 'no format: the file keeps its own format');
+			expect(1, preg_match('~\.png$~', Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'))['href']), 'no format: the file keeps its own format');
 			// format null per call: `emaki.format` applies; with that unset too, the site's `thumbs.format`.
 			$kirby = $app(['emaki.active' => true, 'emaki.format' => 'webp']);
-			expect(1, preg_match('~\.webp$~', Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => null])['href']), 'format null per call: emaki.format applies');
+			expect(1, preg_match('~\.webp$~', Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => null])['href']), 'format null per call: emaki.format applies');
 			$kirby = $app(['emaki.active' => true, 'thumbs' => ['format' => 'jpg']]);
-			expect(1, preg_match('~\.jpg$~', Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => null])['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
+			expect(1, preg_match('~\.jpg$~', Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'), ['format' => null])['href']), 'format null, emaki.format unset: thumbs.format of the site applies');
 
 			// 2. Presets in the site's `thumbs.srcsets`.
 			$kirby = $app(['emaki.active' => true, 'emaki.srcset' => 'gallery', 'thumbs' => ['srcsets' => ['gallery' => [500, 1000]]]]);
-			expect([500, 1000], srcsetWidths(Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-srcset']), 'emaki.srcset names a preset of the site');
+			expect([500, 1000], srcsetWidths(Sayamaapps\Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-srcset']), 'emaki.srcset names a preset of the site');
 			$kirby = $app(['emaki.active' => true, 'emaki.srcset' => 'nope']);
-			expect([800, 1200, 1800, 2400], srcsetWidths(Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-srcset']), 'missing preset: the fallback list');
+			expect([800, 1200, 1800, 2400], srcsetWidths(Sayamaapps\Emaki\Images::attributes($file($kirby, 'wide.jpg'))['data-srcset']), 'missing preset: the fallback list');
 
 			// 3. A rotated JPEG: the thumbs are oriented, the sizes are the oriented ones.
 			$kirby  = $app(['emaki.active' => true]);
 			$turned = $file($kirby, 'turned.jpg');
 			expect(1000, $turned->width(), 'EXIF orientation 6: width of the oriented file');
 			expect(1600, $turned->height(), 'EXIF orientation 6: height of the oriented file');
-			$t = Emaki\Images::attributes($turned);
+			$t = Sayamaapps\Emaki\Images::attributes($turned);
 			expect(1, preg_match('~-1000x\.jpg$~', $t['href']), 'oriented: href at the oriented width');
 			expect([1000, 1600], array_slice(getimagesize($onDisk($t['href'])), 0, 2), 'oriented: the large variant on disk is upright');
 			expect(720, $t['width'], 'oriented: tile width');
@@ -209,18 +209,18 @@ final class KirbyTest extends TestCase
 			expect([720, 1152], array_slice(getimagesize($onDisk($t['src'])), 0, 2), 'oriented: the tile on disk is upright');
 
 			// 4. A PNG, a WebP, a small file (no upscaling), an SVG, a PDF.
-			$flat = Emaki\Images::attributes($file($kirby, 'flat.png'));
+			$flat = Sayamaapps\Emaki\Images::attributes($file($kirby, 'flat.png'));
 			expect(1, preg_match('~-1200x\.png$~', $flat['href']), 'PNG: href at its own width');
-			$modern = Emaki\Images::attributes($file($kirby, 'modern.webp'));
+			$modern = Sayamaapps\Emaki\Images::attributes($file($kirby, 'modern.webp'));
 			expect(1, preg_match('~-1000x\.webp$~', $modern['href']), 'WebP: href at its own width');
 			expect(1, preg_match('~-720x\.webp$~', $modern['src']), 'WebP: tile at 720 px');
-			$small = Emaki\Images::attributes($file($kirby, 'small.png'));
+			$small = Sayamaapps\Emaki\Images::attributes($file($kirby, 'small.png'));
 			expect([300], srcsetWidths($small['data-srcset']), 'no upscaling: a 300 px file has one large variant');
 			expect([300], srcsetWidths($small['srcset']), 'no upscaling: a 300 px file has one tile variant');
 			expect(300, $small['width'], 'no upscaling: src is 300 px');
 			expect([300, 200], array_slice(getimagesize($onDisk($small['href'])), 0, 2), 'no upscaling: the variant on disk is 300 px');
 
-			$svg = Emaki\Images::attributes($file($kirby, 'logo.svg'));
+			$svg = Sayamaapps\Emaki\Images::attributes($file($kirby, 'logo.svg'));
 			expect($file($kirby, 'logo.svg')->url(), $svg['href'], 'SVG: href is the file itself');
 			expect($svg['href'], $svg['src'], 'SVG: src is the file itself');
 			expect(null, $svg['data-srcset'], 'SVG: no large srcset');
@@ -228,7 +228,7 @@ final class KirbyTest extends TestCase
 			expect(200, $svg['width'], 'SVG: its own width');
 			expect(100, $svg['height'], 'SVG: its own height');
 
-			$pdf = Emaki\Images::attributes($file($kirby, 'notes.pdf'));
+			$pdf = Sayamaapps\Emaki\Images::attributes($file($kirby, 'notes.pdf'));
 			expect($file($kirby, 'notes.pdf')->url(), $pdf['href'], 'PDF: href is the file itself');
 			expect([null, null], [$pdf['width'], $pdf['height']], 'PDF: no size');
 			expect(null, $pdf['srcset'], 'PDF: no srcset');
@@ -312,7 +312,7 @@ final class KirbyTest extends TestCase
 			chmod($thumbDir, 0555);
 			try {
 				holds(!is_writable($thumbDir), 'precondition: the thumb folder is read-only (not running as root)');
-				expect(null, Emaki\Images::attributes($queuedFile, ['large' => [444], 'tile' => [444]]), 'queued thumb, folder not writable: attributes are null, no error');
+				expect(null, Sayamaapps\Emaki\Images::attributes($queuedFile, ['large' => [444], 'tile' => [444]]), 'queued thumb, folder not writable: attributes are null, no error');
 			} finally {
 				chmod($thumbDir, 0755);
 			}
@@ -330,7 +330,7 @@ final class KirbyTest extends TestCase
 				holds(!is_writable($pageMedia), 'precondition: the page media folder is read-only (not running as root)');
 				$kirby    = $app(['emaki.active' => true]);
 				$noThumb  = $file($kirby, 'unwritable.png');
-				expect(null, Emaki\Images::attributes($noThumb), 'no thumb can be made: attributes are null');
+				expect(null, Sayamaapps\Emaki\Images::attributes($noThumb), 'no thumb can be made: attributes are null');
 				expect(null, $noThumb->emaki(), '$file->emaki() is null too');
 				$blocked = snippet('emaki/gallery', ['files' => [$noThumb]], true);
 				holds(str_contains($blocked, '<!-- emaki: no thumbs for unwritable.png -->'), 'gallery: the image is left out and marked in an HTML comment');

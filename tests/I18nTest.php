@@ -7,9 +7,9 @@
  *   php tests/I18nTest.php
  */
 
-use Emaki\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Sayamaapps\Emaki\I18n;
 
 #[CoversClass(I18n::class)]
 final class I18nTest extends TestCase
