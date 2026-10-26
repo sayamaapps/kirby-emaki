@@ -1,4 +1,4 @@
-> **Namen seit dem Umbau:** Klassen `Sayamaapps\Emaki\*`, Optionen `sayamaapps.emaki.*` (älterer Schlüssel `emaki.*` als Rückfall), Funktionen `emaki_*` sind Wrapper in `legacy.php`. Die Liste unten nennt die älteren Namen.
+> **Names since the restructuring:** classes `Sayamaapps\Emaki\*`, options `sayamaapps.emaki.*` (the older key `emaki.*` as fallback), functions `emaki_*` are wrappers in `legacy.php`. The list below gives the older names.
 
 # Emaki — specification v1
 
@@ -280,13 +280,14 @@ oriented width/height, SVG passthrough, no upscaling for a 300 px file,
 `caption` modes, `esc()` of a hostile alt, `emaki` snippet prints both tags
 once and nothing when off, `emaki.texts` reaches the script tag, no inline
 style/script in any output (regex check of the output), the original's
-SHA-256 unchanged). Acceptance: `sh tests/run.sh` green on PHP 8.2–8.4.
+SHA-256 unchanged). Acceptance: `composer test` green on PHP 8.2–8.4.
 
-**(c) Browser tests:** `package.json` (`@playwright/test`,
-`@axe-core/playwright`, scripts `test:web`), `playwright.config.ts`
-(webServer `php -S 127.0.0.1:<port> -t .`, project chromium), fixture
-`tests/fixture/index.html` (three small committed JPEGs in
-`tests/fixture/img/`, a `[data-emaki]` gallery using the attributes of §3.1
+**(c) Browser tests:** `tests/browser/package.json` (`@playwright/test`,
+`@axe-core/playwright`, scripts `test:web`), `tests/browser/playwright.config.ts`
+(webServer `php -S 127.0.0.1:<port> -t .` from the repository root, project
+chromium, global setup `tests/browser/make-fixture-images.php`), fixture
+`tests/fixture/index.html` (three small JPEGs generated with GD into
+`tests/fixture/img/`, not committed; a `[data-emaki]` gallery using the attributes of §3.1
 by hand, a second container, a non-image link, the `emaki` tags written out
 by hand with German labels), `tests/browser/emaki.spec.ts` (open by click,
 ←/→/Home/End, Esc, click beside the image, focus return, dialog accessible
@@ -295,7 +296,7 @@ captured via `page.evaluate`, non-image link opens normally, axe with no
 violations while open, no `[style]` in the document, viewport 390 and 1280),
 and the CI job `browser` added to `.github/workflows/ci.yml` (copy the
 `script` job's runner lines; `npx playwright install chromium`; `xvfb-run -a
-npx playwright test --workers=2`; artifact of `test-results/` on failure).
+npx playwright test --workers=2`; artifact of `tests/browser/test-results/` on failure).
 Acceptance: green locally and in CI.
 
 **(d) Docs:** `README.md` (structure of a sayamaapps module README:
@@ -310,9 +311,8 @@ the README; no term that is not in the SPEC.
 
 ## 8. Tests and CI
 
-`sh tests/run.sh` runs every `tests/*Test.php` as a standalone script;
-`node --test tests/*.test.mjs` the script tests; Playwright the browser
-tests. CI (`.github/workflows/ci.yml`): jobs `tests` (PHP 8.2–8.4), `script`,
+`composer test` runs the PHPUnit suite; `node --test tests/*.test.mjs` the
+script tests; Playwright (`tests/browser`) the browser tests. CI (`.github/workflows/ci.yml`): jobs `tests` (PHP 8.2–8.4), `script`,
 `browser` on GitHub-hosted Ubuntu runners; fork PRs never run there.
 Every PR shows green before merge.
 

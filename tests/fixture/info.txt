@@ -1,1 +1,1 @@
-Dieser Link führt zu keinem Bild und bleibt unberührt.
+A link to a non-image file. The viewer leaves it alone.
