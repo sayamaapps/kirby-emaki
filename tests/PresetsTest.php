@@ -15,10 +15,28 @@ use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-
 #[CoversClass(Presets::class)]
 final class PresetsTest extends TestCase
 {
+	/** A Kirby App stand-in: option() answers from a plain array with dotted keys, the one method Emaki reads. */
+	private function appWith(array $config): App
+	{
+		$app = $this->createMock(App::class);
+		$app->method('option')->willReturnCallback(
+			static function (string $key, mixed $default = null) use ($config): mixed {
+				$value = $config;
+				foreach (explode('.', $key) as $part) {
+					if (!is_array($value) || !array_key_exists($part, $value)) {
+						return $default;
+					}
+					$value = $value[$part];
+				}
+				return $value;
+			}
+		);
+		return $app;
+	}
+
 	public function testSuite(): void
 	{
 		/** A site with these thumbs.srcsets presets. */
@@ -101,32 +119,13 @@ final class PresetsTest extends TestCase
 		expect([700], Presets::widths($kirby, 'other', $large, 2000), 'another preset');
 
 		foreach ([1, 2, 319, 320, 721, 960, 961, 2400, 9000] as $fileWidth) {
-		        $widths = Presets::widths($site([]), null, $tile, $fileWidth);
-		        $sorted = $widths;
-		        sort($sorted);
-		        expect($sorted, $widths, "ascending for $fileWidth px");
-		        expect(array_values(array_unique($widths)), $widths, "unique for $fileWidth px");
-		        expect(true, max($widths) <= $fileWidth, 'no width above ' . $fileWidth . ' px');
-		    }
+			$widths = Presets::widths($site([]), null, $tile, $fileWidth);
+			$sorted = $widths;
+			sort($sorted);
+			expect($sorted, $widths, "ascending for $fileWidth px");
+			expect(array_values(array_unique($widths)), $widths, "unique for $fileWidth px");
+			expect(true, max($widths) <= $fileWidth, 'no width above ' . $fileWidth . ' px');
+		}
 
-	}
-
-	/** A Kirby App stand-in: option() answers from a plain array with dotted keys, the one method Emaki reads. */
-	private function appWith(array $config): App
-	{
-		$app = $this->createMock(App::class);
-		$app->method('option')->willReturnCallback(
-			static function (string $key, mixed $default = null) use ($config): mixed {
-				$value = $config;
-				foreach (explode('.', $key) as $part) {
-					if (!is_array($value) || !array_key_exists($part, $value)) {
-						return $default;
-					}
-					$value = $value[$part];
-				}
-				return $value;
-			}
-		);
-		return $app;
 	}
 }

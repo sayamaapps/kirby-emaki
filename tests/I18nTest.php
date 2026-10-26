@@ -11,7 +11,6 @@ use Emaki\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-
 #[CoversClass(I18n::class)]
 final class I18nTest extends TestCase
 {
@@ -22,15 +21,16 @@ final class I18nTest extends TestCase
 		expect(true, $en !== [], 'English table present');
 
 		foreach (I18n::LANGUAGES as $language) {
-		    $table = I18n::table($language);
-		    expect(array_keys($en), array_keys($table), "$language has the keys of en, in order");
-		    foreach ($en as $key => $text) {
-		        preg_match_all('/\{[a-z]+\}/', $text, $a);
-		        preg_match_all('/\{[a-z]+\}/', $table[$key], $b);
-		        sort($a[0]); sort($b[0]);
-		        expect($a[0], $b[0], "$language.$key has the placeholders of en");
-		        expect(true, trim($table[$key]) !== '', "$language.$key is not empty");
-		    }
+			$table = I18n::table($language);
+			expect(array_keys($en), array_keys($table), "$language has the keys of en, in order");
+			foreach ($en as $key => $text) {
+				preg_match_all('/\{[a-z]+\}/', $text, $a);
+				preg_match_all('/\{[a-z]+\}/', $table[$key], $b);
+				sort($a[0]);
+				sort($b[0]);
+				expect($a[0], $b[0], "$language.$key has the placeholders of en");
+				expect(true, trim($table[$key]) !== '', "$language.$key is not empty");
+			}
 		}
 
 		expect([], I18n::table('fr'), 'unknown language: empty table');

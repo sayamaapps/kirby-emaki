@@ -8,12 +8,12 @@
  * CHANGELOG entry.
  */
 return [
-    // Accessible name of the dialog while it is open; {n} and {count} are numbers.
-    'dialog'       => 'Image {n} of {count}',
-    // Visible counter under the image (aria-live).
-    'counter'      => '{n} / {count}',
-    // Button names (aria-label; the buttons show symbols).
-    'button.close' => 'Close',
-    'button.prev'  => 'Previous image',
-    'button.next'  => 'Next image',
+	// Accessible name of the dialog while it is open; {n} and {count} are numbers.
+	'dialog'       => 'Image {n} of {count}',
+	// Visible counter under the image (aria-live).
+	'counter'      => '{n} / {count}',
+	// Button names (aria-label; the buttons show symbols).
+	'button.close' => 'Close',
+	'button.prev'  => 'Previous image',
+	'button.next'  => 'Next image',
 ];
