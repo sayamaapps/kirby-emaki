@@ -201,7 +201,7 @@ class Images
 	 * The thumb maker for one file: a closure that creates and stores the thumb
 	 * of one width, or returns null when it cannot be stored.
 	 *
-	 * @return \Closure(int): ?FileVersion
+	 * @return \Closure(int): (FileVersion|null)
 	 */
 	private static function thumbMaker(File $file, mixed $format, mixed $quality): \Closure
 	{
@@ -226,7 +226,7 @@ class Images
 	 * One thumb per width, or null as soon as one of them cannot be made.
 	 *
 	 * @param int[] $widths
-	 * @param \Closure(int): ?FileVersion $thumb
+	 * @param \Closure(int): (FileVersion|null) $thumb
 	 * @return array<int, FileVersion>|null
 	 */
 	private static function variants(array $widths, \Closure $thumb): array|null
