@@ -30,13 +30,13 @@
         "getkirby/composer-installer": "^1.2"
     },
     "require-dev": {
-        "ergebnis/composer-normalize": "^2.54",
+        "ergebnis/composer-normalize": "2.54.0",
         "getkirby/cms": "^5.0",
-        "icanhazstring/composer-unused": "^0.9.7",
-        "maglnet/composer-require-checker": "^4.0",
-        "phpmd/phpmd": "^2.15",
+        "icanhazstring/composer-unused": "0.9.7",
+        "maglnet/composer-require-checker": "4.17.0",
+        "phpmd/phpmd": "2.15.0",
         "phpunit/phpunit": "11.5.55",
-        "vimeo/psalm": "^6.20"
+        "vimeo/psalm": "6.20.1"
     },
     "config": {
         "allow-plugins": {
