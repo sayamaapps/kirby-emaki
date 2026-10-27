@@ -1,14 +1,12 @@
 <?php
 
-// The labels as Kirby plugin translations, per language. Each text is written once,
-// in translations/<language>.php, under `sayamaapps.emaki.<key>`. The same texts are
-// also registered under the 1.x key `emaki.<key>`, so `t('emaki.<key>')` keeps working.
+// The labels as Kirby plugin translations, per language, under the 1.x keys `emaki.<key>`
+// (the viewer reads its own tables in translations/<language>.php, see Sayamaapps\Emaki\I18n).
 $translations = [];
 foreach (Sayamaapps\Emaki\I18n::LANGUAGES as $language) {
 	$labels = require dirname(__DIR__) . '/translations/' . $language . '.php';
-	$translations[$language] = $labels;
 	foreach ($labels as $key => $text) {
-		$translations[$language][str_replace('sayamaapps.emaki.', 'emaki.', $key)] = $text;
+		$translations[$language]['emaki.' . $key] = $text;
 	}
 }
 

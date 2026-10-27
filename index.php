@@ -9,7 +9,7 @@ use Kirby\Filesystem\F;
  *
  * Kirby loads this file. It registers the class map, the legacy names and the
  * definitions in config/. The logic lives in src/. Off by default: without
- * `'sayamaapps.emaki.active' => true` the `emaki` snippet prints nothing, and
+ * `'emaki.active' => true` the `emaki` snippet prints nothing, and
  * `emaki/gallery` renders plain links to the large image.
  *
  * @author    Simon Räder
@@ -23,7 +23,6 @@ require_once __DIR__ . '/legacy.php';
 Kirby::plugin(
 	name: 'sayamaapps/emaki',
 	extends: [
-		'options'      => require __DIR__ . '/config/options.php',
 		'translations' => require __DIR__ . '/config/translations.php',
 		'snippets'     => require __DIR__ . '/config/snippets.php',
 		'fileMethods'  => require __DIR__ . '/config/file-methods.php',

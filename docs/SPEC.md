@@ -1,4 +1,4 @@
-> **Names since the restructuring:** classes `Sayamaapps\Emaki\*`, options `sayamaapps.emaki.*` (the older key `emaki.*` as fallback), functions `emaki_*` are wrappers in `legacy.php`. The list below gives the older names.
+> **Names:** classes `Sayamaapps\Emaki\*` (the 1.x names `Emaki\*` are aliases), options `emaki.*` (the names of 1.x, read unchanged), functions `emaki_*` are wrappers in `legacy.php`. The list below gives the names of 1.x.
 
 # Emaki — specification v1
 

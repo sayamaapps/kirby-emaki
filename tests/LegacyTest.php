@@ -9,7 +9,7 @@ use Sayamaapps\Emaki\Viewer;
 
 /**
  * The 1.x names still work: the old class names are aliases of the new classes,
- * and the old functions delegate to them and report a deprecation in debug mode.
+ * and the old functions delegate to them. Nothing reports a deprecation at runtime.
  */
 #[CoversClass(I18n::class)]
 #[CoversClass(Images::class)]
@@ -27,31 +27,28 @@ final class LegacyTest extends PluginTestCase
 		$this->assertTrue(class_exists('Emaki\\Presets'), 'Emaki\\Presets is an alias');
 	}
 
-	public function testOldOptionFunctionReadsTheNewOptionAndIsDeprecated(): void
+	public function testOldOptionFunctionReadsTheOptionWithoutDeprecation(): void
 	{
 		require_once dirname(__DIR__) . '/legacy.php';
 
-		$deprecations = [];
+		$reported = [];
 		set_error_handler(
-			function (int $level, string $message) use (&$deprecations): bool {
-				$deprecations[] = $message;
+			function (int $level, string $message) use (&$reported): bool {
+				$reported[] = $message;
 				return true;
 			},
 			E_USER_DEPRECATED
 		);
 
 		try {
-			$kirby = new App(['options' => ['debug' => true, 'sayamaapps.emaki.active' => true]]);
+			$kirby = new App(['options' => ['debug' => true, 'emaki.active' => true]]);
 			$kirby->plugins();
-			$this->assertTrue(emaki_option('active'), 'emaki_option() reads the new option');
+			$this->assertTrue(emaki_option('active'), 'emaki_option() reads emaki.active');
 		} finally {
 			restore_error_handler();
 		}
 
-		$this->assertSame(
-			['emaki_option() is deprecated, use Sayamaapps\\Emaki\\Options::get()'],
-			$deprecations
-		);
+		$this->assertSame([], $reported, 'the wrapper reports nothing at runtime');
 	}
 
 	public function testOldTagsFunctionDelegatesToTheViewer(): void
@@ -59,7 +56,7 @@ final class LegacyTest extends PluginTestCase
 		require_once dirname(__DIR__) . '/legacy.php';
 
 		// Emaki is off: both print nothing. The old function reads the current app, which is this one.
-		$kirby = new App(['options' => ['sayamaapps.emaki.active' => false]]);
+		$kirby = new App(['options' => ['emaki.active' => false]]);
 		$this->assertSame(Viewer::tags($kirby), emaki_tags(), 'emaki_tags() and Viewer::tags() agree while Emaki is off');
 	}
 }

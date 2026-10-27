@@ -14,9 +14,19 @@ All notable changes to this project are documented here. Versions follow
 ### Changed
 
 - **Structure.** Classes live in `Sayamaapps\Emaki\` behind a class map; `index.php` only registers the plugin. Behaviour is unchanged.
-- **Options** are read as `sayamaapps.emaki.<name>`. The older `emaki.<name>` still works and reports a deprecation in debug mode.
-- **Functions** `emaki_option()`, `emaki_i18n()`, `emaki_asset_url()`, `emaki_tags()` and `emaki_attributes()` are wrappers now; the old class names `Emaki\*` are aliases. Both are removed in the next major version. See the README, Deprecations.
-- **Labels** are Kirby translations `sayamaapps.emaki.<key>`. The old keys `emaki.<key>` stay registered with the same texts. `Emaki\I18n::t()` and `table()` stay as wrappers over the same texts and report a deprecation; they are removed in the next major version.
+- **Names of 1.x are kept.** The `Emaki\*` classes are aliases, and the `emaki_*` functions are wrappers. Both are marked `@deprecated` in the code and the README; nothing reports a deprecation at runtime.
+- **Tests** run on PHPUnit (`composer test`), the checks run in CI on PHP 8.2 to 8.5.
+- **Options** are read as before, `emaki.<name>`. Labels come from Emaki's own tables, as before.
+- **`I18n::t()` and `I18n::table()`** keep their 1.x behaviour.
+- **Documentation.** The README lists the 1.x names and the changes planned for 2.0.
+
+### Planned for 2.0
+
+Breaking changes, not part of 1.x:
+
+- The `emaki_*` functions and the `Emaki\*` class names are removed.
+- Options move to `sayamaapps.emaki.<name>`; the `emaki.<name>` names are then deprecated and reported in Kirby's debug mode.
+- Labels are read as Kirby translations `sayamaapps.emaki.<key>`.
 
 ### Removed
 

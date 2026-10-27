@@ -49,7 +49,7 @@ Switch Emaki on in `site/config/config.php` (off by default):
 
 ```php
 return [
-    'sayamaapps.emaki.active' => true,
+    'emaki.active' => true,
 ];
 ```
 
@@ -113,7 +113,7 @@ Emaki styles `.emaki` (the dialog) and its parts: `.emaki-stage`, `.emaki-image`
 
 ## Options
 
-Options are read as `sayamaapps.emaki.<name>`, flat or nested; `null` means "not set". The older spelling `emaki.<name>` still works as a fallback until the next major version, see [Deprecations](#deprecations). Scope: `config` for the site config, `call` for `$file->emaki()`, `gallery` for snippet variables.
+Options are read as `emaki.<name>`, flat or nested; `null` means "not set". Scope: `config` for the site config, `call` for `$file->emaki()`, `gallery` for snippet variables. The option names are planned to change in 2.0, see [Deprecated and planned for 2.0](#deprecated-and-planned-for-20).
 
 | Option | Scope | Default | Meaning |
 |---|---|---|---|
@@ -143,15 +143,15 @@ Example:
 
 ```php
 return [
-    'sayamaapps.emaki.active'    => true,
-    'sayamaapps.emaki.language'  => 'de',
-    'sayamaapps.emaki.srcset'    => 'emaki',
-    'sayamaapps.emaki.format'    => 'webp',
-    'sayamaapps.emaki.texts'     => ['de' => ['button.close' => 'Schließen']],
+    'emaki.active'   => true,
+    'emaki.language' => 'de',
+    'emaki.srcset'   => 'emaki',
+    'emaki.format'   => 'webp',
+    'emaki.texts'    => ['de' => ['button.close' => 'Schließen']],
 ];
 ```
 
-Override labels with `texts`: flat for all languages (`'sayamaapps.emaki.texts' => ['button.close' => 'Done']`) or per language. Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too. The labels are Kirby translations as `sayamaapps.emaki.<key>`.
+Override labels with `texts`: flat for all languages (`'emaki.texts' => ['button.close' => 'Done']`) or per language. Keys and English defaults: `dialog` (`Image {n} of {count}`), `counter` (`{n} / {count}`), `button.close` (`Close`), `button.prev` (`Previous image`), `button.next` (`Next image`). German ships too. The same texts are registered as Kirby translations `emaki.<key>`, so `t('emaki.<key>')` works in the site.
 
 ## Snippets and functions
 
@@ -163,22 +163,24 @@ Override labels with `texts`: flat for all languages (`'sayamaapps.emaki.texts' 
 
 A site that needs its own markup creates `site/snippets/emaki/gallery.php`; Kirby uses that file instead of Emaki's.
 
-## Deprecations
+## Deprecated and planned for 2.0
 
-Nothing is removed before the next major version. The old names below keep working. Options, functions, `I18n::t()` and `I18n::table()` report a deprecation in Kirby's debug mode; translation keys and class names do not.
+Everything in 1.x keeps working. Nothing reports a deprecation at runtime; the names below are marked `@deprecated` in the code.
 
-| Older name | Use instead |
-|---|---|
-| Option `emaki.<name>` | `sayamaapps.emaki.<name>` (the new name wins when both are set) |
-| Translation key `emaki.<key>` | `sayamaapps.emaki.<key>`. The old key stays registered with the same text, but the viewer reads the new one: a site's own translation of the old key does not reach the viewer, so use `texts` or the new key. |
-| `emaki_option($key, $default)` | `Sayamaapps\Emaki\Options::get(App::instance(), $key, $default)` |
-| `emaki_tags()` | `Sayamaapps\Emaki\Viewer::tags(App::instance())` |
-| `emaki_i18n()` | `Sayamaapps\Emaki\Viewer::prepare(App::instance())` |
-| `emaki_asset_url($file)` | `Sayamaapps\Emaki\Viewer::assetUrl(App::instance(), $file)` |
-| `emaki_attributes($file, $options)` | `Sayamaapps\Emaki\Images::attributes($file, $options)` |
-| `Emaki\I18n::t($key, $values)` | Kirby's translations: `I18n::translate('sayamaapps.emaki.<key>')`, with the placeholders filled in by the site |
-| `Emaki\I18n::table($language)` | Kirby's translations: `I18n::translate('sayamaapps.emaki.<key>')` |
-| Classes `Emaki\Images`, `Emaki\I18n`, `Emaki\Options`, `Emaki\Presets` | the same names in `Sayamaapps\Emaki\` (aliases) |
+| Name in 1.x | Status | Use instead |
+|---|---|---|
+| `emaki_option($key, $default)` | deprecated wrapper | `Sayamaapps\Emaki\Options::get(App::instance(), $key, $default)` |
+| `emaki_tags()` | deprecated wrapper | `Sayamaapps\Emaki\Viewer::tags(App::instance())` |
+| `emaki_i18n()` | deprecated wrapper | `Sayamaapps\Emaki\Viewer::prepare(App::instance())` |
+| `emaki_asset_url($file)` | deprecated wrapper | `Sayamaapps\Emaki\Viewer::assetUrl(App::instance(), $file)` |
+| `emaki_attributes($file, $options)` | deprecated wrapper | `Sayamaapps\Emaki\Images::attributes($file, $options)` |
+| `Emaki\Images`, `Emaki\I18n`, `Emaki\Options`, `Emaki\Presets` | aliases | the same classes in `Sayamaapps\Emaki\` |
+
+Planned for 2.0 (breaking, not in 1.x):
+
+- The `emaki_*` functions and the `Emaki\*` class names are removed.
+- Options move to `sayamaapps.emaki.<name>`. The names `emaki.<name>` are then deprecated and reported in Kirby's debug mode.
+- The labels are read as Kirby translations `sayamaapps.emaki.<key>`.
 
 ## Privacy
 

@@ -16,7 +16,7 @@
 	<rule ref="rulesets/design.xml" />
 
 	<rule ref="rulesets/naming.xml">
-		<!-- I18n::t() is the 1.x name, kept as a deprecated wrapper (README, Deprecations). -->
+		<!-- I18n::t() is the 1.x name and stays as it is (README, Deprecated and planned for 2.0). -->
 		<exclude name="ShortMethodName" />
 	</rule>
 

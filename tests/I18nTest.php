@@ -2,8 +2,8 @@
 
 /**
  * The labels: every language file has the keys and placeholders of en.php; the
- * 1.x keys carry the same texts; the labels come from Kirby's translations in the
- * language of the request, with the `texts` overrides in front.
+ * labels come from the language tables in the language of the request, with the
+ * `texts` overrides in front; the 1.x keys are registered as Kirby translations.
  */
 
 use Kirby\Cms\App;
@@ -42,7 +42,7 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('Schließen', I18n::labels()['close'], 'invalid overrides are ignored');
 	}
 
-	public function testLabelsAreReadFromKirbyTranslations(): void
+	public function testLabelsComeFromTheLanguageTables(): void
 	{
 		new App(['options' => []]);
 
@@ -50,52 +50,34 @@ final class I18nTest extends PluginTestCase
 		I18n::setOverrides(null);
 
 		$this->assertSame('de', I18n::language(), 'language set');
-		$this->assertSame('Schließen', I18n::labels()['close'], 'German label from the Kirby translations');
+		$this->assertSame('Schließen', I18n::labels()['close'], 'German label from the table');
 		$this->assertSame('Bild {n} von {count}', I18n::labels()['dialog'], 'the placeholders stay for the script');
 	}
 
-	public function testOldKeysCarryTheSameTexts(): void
+	public function testLabelsAreRegisteredAsKirbyTranslationsUnderTheOldKeys(): void
 	{
 		$translations = require dirname(__DIR__) . '/config/translations.php';
 
 		foreach (I18n::LANGUAGES as $language) {
-			foreach ($translations[$language] as $key => $text) {
-				if (str_starts_with($key, 'sayamaapps.emaki.')) {
-					$old = str_replace('sayamaapps.emaki.', 'emaki.', $key);
-					$this->assertSame($text, $translations[$language][$old] ?? null, "$language: the 1.x key of $key");
-				}
+			$table = I18n::table($language);
+			foreach ($table as $key => $text) {
+				$this->assertSame($text, $translations[$language]['emaki.' . $key] ?? null, "$language: emaki.$key");
 			}
 		}
 	}
 
-	public function testOldTextMethodsKeepTheirTextsAndAreDeprecated(): void
+	public function testTextMethodsFillPlaceholdersAndFallBack(): void
 	{
-		$deprecations = [];
-		set_error_handler(
-			function (int $level, string $message) use (&$deprecations): bool {
-				$deprecations[] = $message;
-				return true;
-			},
-			E_USER_DEPRECATED
-		);
+		new App(['options' => []]);
 
-		try {
-			new App(['options' => ['debug' => true]]);
+		I18n::setLanguage('de');
+		I18n::setOverrides(null);
 
-			I18n::setLanguage('de');
-			I18n::setOverrides(null);
-
-			$this->assertSame('Bild 3 von 7', I18n::t('dialog', ['n' => 3, 'count' => 7]), 'placeholders filled');
-			$this->assertSame('Schließen', I18n::t('button.close'), 'German label from the table');
-			$this->assertSame('nope', I18n::t('nope'), 'unknown key falls back to the key');
-			$this->assertSame('Schließen', I18n::table('de')['button.close'], 'table keys have no prefix');
-			$this->assertSame([], I18n::table('fr'), 'unknown language: empty table');
-		} finally {
-			restore_error_handler();
-		}
-
-		$this->assertCount(5, $deprecations, 't() and table() report a deprecation on every call');
-		$this->assertStringContainsString('Emaki\\I18n::t() is deprecated', $deprecations[0]);
+		$this->assertSame('Bild 3 von 7', I18n::t('dialog', ['n' => 3, 'count' => 7]), 'placeholders filled');
+		$this->assertSame('Schließen', I18n::t('button.close'), 'German label from the table');
+		$this->assertSame('nope', I18n::t('nope'), 'unknown key falls back to the key');
+		$this->assertSame('Schließen', I18n::table('de')['button.close'], 'table keys have no prefix');
+		$this->assertSame([], I18n::table('fr'), 'unknown language: empty table');
 	}
 
 	public function testOverridesApplyFlatAndPerLanguage(): void

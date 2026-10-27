@@ -22,7 +22,7 @@ class Images
 	/** The tile `src` is the smallest tile variant at least this wide (px), else the largest. */
 	private const SRC_FROM = 720;
 
-	/** Default `sizes` of the tile (per call); the large view uses the option `sayamaapps.emaki.sizes`. */
+	/** Default `sizes` of the tile (per call); the large view uses the option `emaki.sizes`. */
 	private const TILE_SIZES = '(max-width: 40rem) 100vw, 33vw';
 
 	/**

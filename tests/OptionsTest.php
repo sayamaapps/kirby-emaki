@@ -5,67 +5,39 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Sayamaapps\Emaki\Options;
 
 /**
- * Options are read as sayamaapps.emaki.<key>, with the older spelling emaki.<key>
- * as fallback. The fallback is reported as a deprecation in debug mode.
+ * Options are read as emaki.<key>, flat or nested. `null` counts as not set.
+ * Reading them reports nothing, in debug mode too.
  */
 #[CoversClass(Options::class)]
 final class OptionsTest extends PluginTestCase
 {
-	public function testNestedNewSpellingReadsOtherKeys(): void
+	public function testNestedSpellingReadsOtherKeys(): void
 	{
-		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['sizes' => '50vw']]]]);
+		$kirby = new App(['options' => ['emaki' => ['sizes' => '50vw']]]);
 
 		$this->assertSame('50vw', Options::get($kirby, 'sizes', '100vw'), 'nested value beats the default');
 		$this->assertSame('100vw', Options::get($kirby, 'format', '100vw'), 'unset nested key: the default');
 	}
 
-	public function testNestedNewSpellingSwitchesEmakiOn(): void
+	public function testNestedSpellingSwitchesEmakiOn(): void
 	{
-		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['active' => true]]]]);
+		$kirby = new App(['options' => ['emaki' => ['active' => true]]]);
 
-		$this->assertTrue(Options::active($kirby), 'nested sayamaapps.emaki.active is read');
+		$this->assertTrue(Options::active($kirby), 'nested emaki.active is read');
 	}
 
-	public function testNestedNewSpellingWinsOverOldFlatSpelling(): void
+	public function testFlatSpellingSwitchesEmakiOn(): void
 	{
-		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['active' => false]], 'emaki.active' => true]]);
+		$kirby = new App(['options' => ['emaki.active' => true]]);
 
-		$this->assertFalse(Options::active($kirby), 'nested sayamaapps.emaki.active wins');
+		$this->assertTrue(Options::active($kirby), 'emaki.active is read');
 	}
 
-	public function testNewSpellingIsNotReported(): void
+	public function testOnlyTrueSwitchesEmakiOn(): void
 	{
-		$deprecations = [];
-		set_error_handler(
-			function (int $level, string $message) use (&$deprecations): bool {
-				$deprecations[] = $message;
-				return true;
-			},
-			E_USER_DEPRECATED
-		);
+		$kirby = new App(['options' => ['emaki.active' => 'yes']]);
 
-		try {
-			$kirby = new App(['options' => ['debug' => true, 'sayamaapps.emaki.active' => true]]);
-			$this->assertTrue(Options::active($kirby));
-		} finally {
-			restore_error_handler();
-		}
-
-		$this->assertSame([], $deprecations);
-	}
-
-	public function testNewSpellingSwitchesEmakiOn(): void
-	{
-		$kirby = new App(['options' => ['sayamaapps.emaki.active' => true]]);
-
-		$this->assertTrue(Options::active($kirby), 'sayamaapps.emaki.active is read');
-	}
-
-	public function testNewSpellingWinsWhenBothAreSet(): void
-	{
-		$kirby = new App(['options' => ['sayamaapps.emaki.active' => false, 'emaki.active' => true]]);
-
-		$this->assertFalse(Options::active($kirby), 'sayamaapps.emaki.active wins');
+		$this->assertFalse(Options::active($kirby), 'a value other than true does not switch on');
 	}
 
 	public function testNotSetFallsBackToTheDefault(): void
@@ -78,17 +50,24 @@ final class OptionsTest extends PluginTestCase
 
 	public function testNullCountsAsNotSet(): void
 	{
-		$kirby = new App(['options' => ['sayamaapps.emaki.sizes' => null, 'emaki.sizes' => '50vw']]);
+		$kirby = new App(['options' => ['emaki.sizes' => null]]);
 
-		$this->assertSame('50vw', Options::get($kirby, 'sizes', '100vw'), 'null falls through to the older spelling');
+		$this->assertSame('100vw', Options::get($kirby, 'sizes', '100vw'), 'null gives the default');
 	}
 
-	public function testOldSpellingIsReportedInDebugMode(): void
+	public function testLanguageOptionWins(): void
 	{
-		$deprecations = [];
+		$kirby = new App(['options' => ['emaki.language' => 'de']]);
+
+		$this->assertSame('de', Options::language($kirby), 'emaki.language is the first choice');
+	}
+
+	public function testReadingReportsNoDeprecation(): void
+	{
+		$reported = [];
 		set_error_handler(
-			function (int $level, string $message) use (&$deprecations): bool {
-				$deprecations[] = $message;
+			function (int $level, string $message) use (&$reported): bool {
+				$reported[] = $message;
 				return true;
 			},
 			E_USER_DEPRECATED
@@ -101,35 +80,6 @@ final class OptionsTest extends PluginTestCase
 			restore_error_handler();
 		}
 
-		$this->assertSame(['Emaki: emaki.active is deprecated, use sayamaapps.emaki.active'], $deprecations);
-	}
-
-	public function testOldSpellingIsReportedOncePerApp(): void
-	{
-		$deprecations = [];
-		set_error_handler(
-			function (int $level, string $message) use (&$deprecations): bool {
-				$deprecations[] = $message;
-				return true;
-			},
-			E_USER_DEPRECATED
-		);
-
-		try {
-			$kirby = new App(['options' => ['debug' => true, 'emaki.active' => true]]);
-			Options::active($kirby);
-			Options::active($kirby);
-		} finally {
-			restore_error_handler();
-		}
-
-		$this->assertCount(1, $deprecations, 'the second read of the same old name is not reported again');
-	}
-
-	public function testOldSpellingStillWorks(): void
-	{
-		$kirby = new App(['options' => ['emaki.active' => true]]);
-
-		$this->assertTrue(Options::active($kirby), 'emaki.active is read as fallback');
+		$this->assertSame([], $reported, 'no runtime deprecation in debug mode');
 	}
 }
