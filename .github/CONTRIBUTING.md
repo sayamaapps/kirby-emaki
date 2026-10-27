@@ -18,25 +18,23 @@ To try the plugin on a site, link or copy the folder to `site/plugins/emaki/`.
 
 ## Checks
 
-Run these before you open a pull request. CI runs the same checks on PHP 8.2 to 8.5.
+`composer ci` runs the checks of the CI workflow, in the same order: Composer validation and layout, dependency checks, platform requirements, Psalm, PHP Mess Detector and the tests. Run it before you open a pull request. CI runs the same checks on PHP 8.2 to 8.5.
 
 ```sh
-composer test                     # PHPUnit
-composer analyze:psalm            # Psalm
-composer analyze:phpmd            # PHP Mess Detector
-composer analyze:unused           # unused Composer packages
-composer analyze:require-checker  # undeclared dependencies
-composer check-platform-reqs       # platform requirements
-composer normalize:check          # composer.json layout
+composer ci
 npm ci --prefix tests/browser && npm --prefix tests/browser run test:web   # browser tests (Chromium)
 ```
 
-Code style is checked with PHP-CS-Fixer and the Kirby rule set (`getkirby/php-cs`). The package is installed globally, because it needs PHP 8.3 or newer and this package supports PHP 8.2:
+Two checks need global tools: php-cs needs PHP 8.3 or newer, and phpcpd conflicts with PHPUnit 11 in this project:
 
 ```sh
 composer global require getkirby/php-cs:0.2.1
-kirby-cs fix --dry-run --diff     # the global bin directory must be in PATH
+composer global require sebastian/phpcpd:6.0.3
+kirby-cs fix --dry-run --diff               # code style, Kirby rule set
+phpcpd --fuzzy --exclude tests --exclude vendor .   # duplicated code
 ```
+
+The global bin directory must be in `PATH`.
 
 ## Conventions
 
