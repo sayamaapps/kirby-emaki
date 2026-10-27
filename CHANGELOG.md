@@ -11,9 +11,16 @@ All notable changes to this project are documented here. Versions follow
 
 ## [Unreleased]
 
+### Added
+
+- `Sayamaapps\Emaki\Viewer` with `prepare()`, `tags()` and `assetUrl()`. The snippets and the `emaki_*` wrappers use it.
+
 ### Changed
 
 - **Structure.** Classes live in `Sayamaapps\Emaki\` behind a class map; `index.php` only registers the plugin. Behaviour is unchanged.
+- **Error message.** A direct call of the old class `Emaki\Images::attributes()` with a wrong argument type still throws `TypeError`, but the message names `Sayamaapps\Emaki\Images::attributes()`. The function `emaki_attributes()` is unchanged.
+- **Metadata.** `composer.json` has new keywords and tool settings; the installed package is unchanged.
+- **Lock file.** `composer.lock` is committed and left out of the installed package. CI tests the lowest, the locked and the newest dependencies.
 - **Names of 1.x are kept.** The `Emaki\*` classes are aliases, and the `emaki_*` functions are wrappers. Both are marked `@deprecated` in the code and the README; nothing reports a deprecation at runtime.
 - **Tests** run on PHPUnit (`composer test`), the checks run in CI on PHP 8.2 to 8.5.
 - **Options** are read as before, `emaki.<name>`. Labels come from Emaki's own tables, as before.

@@ -41,6 +41,7 @@ The global bin directory must be in `PATH`.
 - Tabs for indentation, LF line endings. `.editorconfig` lists the rest.
 - Classes live in `src/`, one class per file. The class map in `autoload.php` lists them, and `tests/AutoloadTest.php` checks it.
 - Keep public names stable. A rename gets a deprecation wrapper first, see the README section Deprecated and planned for 2.0.
+- Until 2.0 nothing reports a deprecation at runtime. Deprecations are `@deprecated` docblocks and README entries only: Kirby's debug mode turns a deprecation notice into an exception. Public constants keep their 1.x values, and no new option keys are read.
 - Commit messages follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `style:`, `chore:`).
 
 ## Pull requests
