@@ -7,4 +7,4 @@
  *   <?php snippet('emaki') ?>
  */
 ?>
-<?= emaki_tags() ?>
+<?= \Sayamaapps\Emaki\Viewer::tags(\Kirby\Cms\App::instance()) ?>

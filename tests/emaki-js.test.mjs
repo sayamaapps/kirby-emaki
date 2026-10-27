@@ -1,9 +1,9 @@
 // Guards and behaviour of Emaki's script and stylesheet. The guards hold
 // whatever the viewer does: nothing stored in the browser, no address but the
 // project page, no inline styles, and a page without [data-emaki] is left
-// alone. The behaviour tests (SPEC.md §4.7) run assets/emaki.js against a
-// small fake DOM; no dependencies.
-//   node --test tests/
+// alone. The behaviour tests run assets/emaki.js against a small fake DOM;
+// no dependencies.
+//   node --test tests/*.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -201,7 +201,7 @@ const three = [
   { href: '/media/three-2400x1600.jpg', alt: 'Three' },
 ];
 
-// --- §4.7 behaviour --------------------------------------------------------
+// --- behaviour -------------------------------------------------------------
 
 test('a click opens the dialog on that image, with its srcset and sizes', () => {
   const { boxes, dialog } = page([[

@@ -1,6 +1,6 @@
 /**
  * Emaki — image viewer for galleries. No library, no request to any server,
- * nothing stored in the browser. Behaviour: SPEC.md §4.
+ * nothing stored in the browser.
  *
  * Each container with `data-emaki` is one sequence. Every link inside it that
  * points at an image file (or has data-srcset) takes part; other links are

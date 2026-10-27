@@ -2,7 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
- * Browser behaviour of the viewer (SPEC.md §4, §7c), against the fixture page
+ * Browser behaviour of the viewer, against the fixture page
  * tests/fixture/index.html. Every case that touches the dialog runs at a phone
  * width (390 px) and at a desktop width (1280 px).
  *

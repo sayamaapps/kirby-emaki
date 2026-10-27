@@ -1,16 +1,26 @@
 {
     "name": "sayamaapps/kirby-emaki",
     "description": "Dependency-free image viewer and gallery helper for Kirby CMS 5.",
-    "type": "kirby-plugin",
     "license": "MIT",
-    "keywords": ["kirby", "kirby-plugin", "kirby-5", "lightbox", "gallery", "image-viewer", "srcset", "accessibility", "csp"],
-    "homepage": "https://github.com/sayamaapps/kirby-emaki",
+    "type": "kirby-plugin",
+    "keywords": [
+        "kirby",
+        "kirby-plugin",
+        "kirby-5",
+        "lightbox",
+        "gallery",
+        "image-viewer",
+        "srcset",
+        "accessibility",
+        "csp"
+    ],
     "authors": [
         {
             "name": "Simon Räder",
             "homepage": "https://sayamaapps.de"
         }
     ],
+    "homepage": "https://github.com/sayamaapps/kirby-emaki",
     "support": {
         "issues": "https://github.com/sayamaapps/kirby-emaki/issues",
         "source": "https://github.com/sayamaapps/kirby-emaki"
@@ -20,25 +30,48 @@
         "getkirby/composer-installer": "^1.2"
     },
     "require-dev": {
-        "getkirby/cms": "^5.0"
-    },
-    "scripts": {
-        "test": "sh tests/run.sh"
+        "ergebnis/composer-normalize": "2.54.0",
+        "getkirby/cms": "^5.0",
+        "icanhazstring/composer-unused": "0.9.7",
+        "maglnet/composer-require-checker": "4.17.0",
+        "phpmd/phpmd": "2.15.0",
+        "phpunit/phpunit": "11.5.55",
+        "vimeo/psalm": "6.20.1"
     },
     "config": {
-        "optimize-autoloader": true,
         "allow-plugins": {
+            "ergebnis/composer-normalize": true,
             "getkirby/composer-installer": true
         },
+        "optimize-autoloader": true,
         "platform": {
-            "php": "8.2.0"
-        }
+            "php": "8.2.27"
+        },
+        "sort-packages": true
     },
     "extra": {
         "installer-name": "emaki",
-        "kirby-cms-path": false,
         "kirby": {
             "compatible": "^5.0"
-        }
+        },
+        "kirby-cms-path": false
+    },
+    "scripts": {
+        "analyze:phpmd": "vendor/bin/phpmd src,index.php,legacy.php,autoload.php github phpmd.xml.dist",
+        "analyze:psalm": "vendor/bin/psalm",
+        "analyze:require-checker": "vendor/bin/composer-require-checker check --config-file=.github/composer-require-checker.json composer.json",
+        "analyze:unused": "vendor/bin/composer-unused --configuration=.github/composer-unused.php",
+        "ci": [
+            "@composer validate --strict --no-check-version --no-check-all",
+            "@normalize:check",
+            "@analyze:require-checker",
+            "@analyze:unused",
+            "@composer check-platform-reqs",
+            "@analyze:psalm",
+            "@analyze:phpmd",
+            "@test"
+        ],
+        "normalize:check": "@composer normalize --dry-run",
+        "test": "vendor/bin/phpunit"
     }
 }
