@@ -55,10 +55,12 @@ class Viewer
 		self::prepare($kirby);
 
 		$html = '';
-		if (Options::get($kirby, 'style', true) !== false && ($stylesheet = self::assetUrl($kirby, 'emaki.css')) !== null) {
+		$stylesheet = self::assetUrl($kirby, 'emaki.css');
+		if (Options::get($kirby, 'style', true) !== false && $stylesheet !== null) {
 			$html .= '<link rel="stylesheet" href="' . esc($stylesheet) . '">';
 		}
-		if (Options::get($kirby, 'script', true) !== false && ($script = self::assetUrl($kirby, 'emaki.js')) !== null) {
+		$script = self::assetUrl($kirby, 'emaki.js');
+		if (Options::get($kirby, 'script', true) !== false && $script !== null) {
 			$data = '';
 			foreach (I18n::labels() as $name => $label) {
 				$data .= ' data-' . $name . '="' . esc($label) . '"';
