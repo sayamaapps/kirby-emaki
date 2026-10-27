@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { join } from 'node:path';
 
 /**
- * Browser tests of the viewer (SPEC.md §7c, §8): assets/emaki.js and
+ * Browser tests of the viewer: assets/emaki.js and
  * emaki.css against the fixture page tests/fixture/index.html, served from the
  * repository root by PHP's built-in server. Chromium only, no build step.
  * The fixture images are generated before the run (global-setup.ts).
