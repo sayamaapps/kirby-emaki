@@ -43,34 +43,6 @@ final class PresetsTest extends TestCase
 		return $this->appWith(['thumbs' => ['srcsets' => $srcsets]]);
 	}
 
-	public function testPlainListIsCappedAtTheFileWidth(): void
-	{
-		$kirby = $this->site(['emaki' => [400, 800, 1600]]);
-		$large = Options::LARGE_WIDTHS;
-
-		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', $large, 2000), 'file wider than the list: the list as it is');
-		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', $large, 1600), 'file as wide as the largest');
-		$this->assertSame([400, 800, 1000], Presets::widths($kirby, 'emaki', $large, 1000), 'widths above the file are cut, the file width is added');
-		$this->assertSame([400, 800], Presets::widths($kirby, 'emaki', $large, 800), 'a width equal to the file is not doubled');
-		$this->assertSame([400], Presets::widths($kirby, 'emaki', $large, 400), 'file as wide as the smallest');
-	}
-
-	public function testFileNarrowerThanEveryWidthGetsOneVariant(): void
-	{
-		$kirby = $this->site(['emaki' => [400, 800, 1600]]);
-
-		$this->assertSame([300], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 300), 'one variant at its own width');
-	}
-
-	public function testWidthKeysWithConditionsAreWidths(): void
-	{
-		$kirby = $this->site(['emaki' => [400 => 'landscape', 800 => '(min-width: 40rem)']]);
-		$large = Options::LARGE_WIDTHS;
-
-		$this->assertSame([400, 800], Presets::widths($kirby, 'emaki', $large, 2000), 'keys are the widths');
-		$this->assertSame([400, 600], Presets::widths($kirby, 'emaki', $large, 600), 'capped at the file width');
-	}
-
 	public function testDescriptorFormUsesItsWidth(): void
 	{
 		$kirby = $this->site(['emaki' => ['400w' => ['width' => 400, 'quality' => 70], '800w' => ['width' => 800]]]);
@@ -80,18 +52,42 @@ final class PresetsTest extends TestCase
 		$this->assertSame([400, 500], Presets::widths($kirby, 'emaki', $large, 500), 'capped at the file width');
 	}
 
+	public function testEmptyPresetUsesTheFallbackWidth(): void
+	{
+		$tile = Options::TILE_WIDTHS;
+
+		$this->assertSame([960], Presets::widths($this->site(['emaki' => []]), 'emaki', $tile, 2000), 'largest fallback width');
+		$this->assertSame([500], Presets::widths($this->site(['emaki' => []]), 'emaki', $tile, 500), 'narrow file: its own width');
+	}
+
+	public function testFallbackListIsCappedAtTheFileWidth(): void
+	{
+		$large = Options::LARGE_WIDTHS;
+
+		$this->assertSame([800, 1000], Presets::widths($this->site([]), null, $large, 1000), '800 plus the file width');
+		$this->assertSame([800, 1200, 1800, 2000], Presets::widths($this->site([]), null, $large, 2000), 'capped at 2000 px');
+	}
+
+	public function testFileNarrowerThanEveryWidthGetsOneVariant(): void
+	{
+		$kirby = $this->site(['emaki' => [400, 800, 1600]]);
+
+		$this->assertSame([300], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 300), 'one variant at its own width');
+	}
+
+	public function testFileWithoutWidthHasNoWidths(): void
+	{
+		$large = Options::LARGE_WIDTHS;
+
+		$this->assertSame([], Presets::widths($this->site([]), null, $large, 0), 'width 0');
+		$this->assertSame([], Presets::widths($this->site([]), null, $large, -4), 'negative width');
+	}
+
 	public function testIntegerKeyWithOptionsIsTheWidth(): void
 	{
 		$kirby = $this->site(['emaki' => [400 => ['quality' => 70], 900 => ['format' => 'webp']]]);
 
 		$this->assertSame([400, 900], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
-	}
-
-	public function testUnsortedListWithDuplicatesIsAscendingAndUnique(): void
-	{
-		$kirby = $this->site(['emaki' => [1600, 400, 800, 400]]);
-
-		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
 	}
 
 	public function testInvalidEntriesAreIgnoredAndNumericStringsCount(): void
@@ -108,14 +104,6 @@ final class PresetsTest extends TestCase
 		$this->assertSame([800, 1200], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
 	}
 
-	public function testPassedListIsUsedAndSorted(): void
-	{
-		$large = Options::LARGE_WIDTHS;
-
-		$this->assertSame([300, 900], Presets::widths($this->site([]), [300, 900], $large, 2000), 'a plain list passed as the preset');
-		$this->assertSame([300, 900], Presets::widths($this->site([]), [900, 300], $large, 2000), 'a passed list is sorted too');
-	}
-
 	public function testMissingPresetUsesTheFallbackList(): void
 	{
 		$large = Options::LARGE_WIDTHS;
@@ -124,20 +112,37 @@ final class PresetsTest extends TestCase
 		$this->assertSame($large, Presets::widths($this->site([]), 'missing', $large, 3000), 'missing preset name: the fallback list');
 	}
 
-	public function testFallbackListIsCappedAtTheFileWidth(): void
+	public function testNamedPresetsAreSeparate(): void
+	{
+		$kirby = $this->site(['emaki' => [400], 'other' => [700]]);
+
+		$this->assertSame([400], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
+		$this->assertSame([700], Presets::widths($kirby, 'other', Options::LARGE_WIDTHS, 2000));
+	}
+
+	public function testNoUsableWidthGivesOneVariantAtTheFileWidth(): void
+	{
+		$this->assertSame([700], Presets::widths($this->site([]), null, [], 700));
+	}
+
+	public function testPassedListIsUsedAndSorted(): void
 	{
 		$large = Options::LARGE_WIDTHS;
 
-		$this->assertSame([800, 1000], Presets::widths($this->site([]), null, $large, 1000), '800 plus the file width');
-		$this->assertSame([800, 1200, 1800, 2000], Presets::widths($this->site([]), null, $large, 2000), 'capped at 2000 px');
+		$this->assertSame([300, 900], Presets::widths($this->site([]), [300, 900], $large, 2000), 'a plain list passed as the preset');
+		$this->assertSame([300, 900], Presets::widths($this->site([]), [900, 300], $large, 2000), 'a passed list is sorted too');
 	}
 
-	public function testEmptyPresetUsesTheFallbackWidth(): void
+	public function testPlainListIsCappedAtTheFileWidth(): void
 	{
-		$tile = Options::TILE_WIDTHS;
+		$kirby = $this->site(['emaki' => [400, 800, 1600]]);
+		$large = Options::LARGE_WIDTHS;
 
-		$this->assertSame([960], Presets::widths($this->site(['emaki' => []]), 'emaki', $tile, 2000), 'largest fallback width');
-		$this->assertSame([500], Presets::widths($this->site(['emaki' => []]), 'emaki', $tile, 500), 'narrow file: its own width');
+		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', $large, 2000), 'file wider than the list: the list as it is');
+		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', $large, 1600), 'file as wide as the largest');
+		$this->assertSame([400, 800, 1000], Presets::widths($kirby, 'emaki', $large, 1000), 'widths above the file are cut, the file width is added');
+		$this->assertSame([400, 800], Presets::widths($kirby, 'emaki', $large, 800), 'a width equal to the file is not doubled');
+		$this->assertSame([400], Presets::widths($kirby, 'emaki', $large, 400), 'file as wide as the smallest');
 	}
 
 	public function testPresetWithOnlyInvalidEntriesUsesTheFallbackWidth(): void
@@ -147,25 +152,20 @@ final class PresetsTest extends TestCase
 		$this->assertSame([960], Presets::widths($kirby, 'emaki', Options::TILE_WIDTHS, 2000));
 	}
 
-	public function testNoUsableWidthGivesOneVariantAtTheFileWidth(): void
+	public function testUnsortedListWithDuplicatesIsAscendingAndUnique(): void
 	{
-		$this->assertSame([700], Presets::widths($this->site([]), null, [], 700));
+		$kirby = $this->site(['emaki' => [1600, 400, 800, 400]]);
+
+		$this->assertSame([400, 800, 1600], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
 	}
 
-	public function testFileWithoutWidthHasNoWidths(): void
+	public function testWidthKeysWithConditionsAreWidths(): void
 	{
+		$kirby = $this->site(['emaki' => [400 => 'landscape', 800 => '(min-width: 40rem)']]);
 		$large = Options::LARGE_WIDTHS;
 
-		$this->assertSame([], Presets::widths($this->site([]), null, $large, 0), 'width 0');
-		$this->assertSame([], Presets::widths($this->site([]), null, $large, -4), 'negative width');
-	}
-
-	public function testNamedPresetsAreSeparate(): void
-	{
-		$kirby = $this->site(['emaki' => [400], 'other' => [700]]);
-
-		$this->assertSame([400], Presets::widths($kirby, 'emaki', Options::LARGE_WIDTHS, 2000));
-		$this->assertSame([700], Presets::widths($kirby, 'other', Options::LARGE_WIDTHS, 2000));
+		$this->assertSame([400, 800], Presets::widths($kirby, 'emaki', $large, 2000), 'keys are the widths');
+		$this->assertSame([400, 600], Presets::widths($kirby, 'emaki', $large, 600), 'capped at the file width');
 	}
 
 	/** @return iterable<string, array{int}> */

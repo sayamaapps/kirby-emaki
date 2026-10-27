@@ -42,6 +42,18 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('Schließen', I18n::labels()['close'], 'invalid overrides are ignored');
 	}
 
+	public function testLabelsAreRegisteredAsKirbyTranslationsUnderTheOldKeys(): void
+	{
+		$translations = require dirname(__DIR__) . '/config/translations.php';
+
+		foreach (I18n::LANGUAGES as $language) {
+			$table = I18n::table($language);
+			foreach ($table as $key => $text) {
+				$this->assertSame($text, $translations[$language]['emaki.' . $key] ?? null, "$language: emaki.$key");
+			}
+		}
+	}
+
 	public function testLabelsComeFromTheLanguageTables(): void
 	{
 		new App(['options' => []]);
@@ -54,16 +66,17 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('Bild {n} von {count}', I18n::labels()['dialog'], 'the placeholders stay for the script');
 	}
 
-	public function testLabelsAreRegisteredAsKirbyTranslationsUnderTheOldKeys(): void
+	public function testOverridesApplyFlatAndPerLanguage(): void
 	{
-		$translations = require dirname(__DIR__) . '/config/translations.php';
+		new App(['options' => []]);
 
-		foreach (I18n::LANGUAGES as $language) {
-			$table = I18n::table($language);
-			foreach ($table as $key => $text) {
-				$this->assertSame($text, $translations[$language]['emaki.' . $key] ?? null, "$language: emaki.$key");
-			}
-		}
+		I18n::setLanguage('de');
+		I18n::setOverrides(['button.close' => 'Zu', 'de' => ['button.next' => 'Weiter'], 'en' => ['button.prev' => 'Back']]);
+
+		$labels = I18n::labels();
+		$this->assertSame('Zu', $labels['close'], 'flat override applies');
+		$this->assertSame('Weiter', $labels['next'], 'language override applies');
+		$this->assertSame('Vorheriges Bild', $labels['prev'], 'other language override is ignored');
 	}
 
 	public function testTextMethodsFillPlaceholdersAndFallBack(): void
@@ -78,19 +91,6 @@ final class I18nTest extends PluginTestCase
 		$this->assertSame('nope', I18n::t('nope'), 'unknown key falls back to the key');
 		$this->assertSame('Schließen', I18n::table('de')['button.close'], 'table keys have no prefix');
 		$this->assertSame([], I18n::table('fr'), 'unknown language: empty table');
-	}
-
-	public function testOverridesApplyFlatAndPerLanguage(): void
-	{
-		new App(['options' => []]);
-
-		I18n::setLanguage('de');
-		I18n::setOverrides(['button.close' => 'Zu', 'de' => ['button.next' => 'Weiter'], 'en' => ['button.prev' => 'Back']]);
-
-		$labels = I18n::labels();
-		$this->assertSame('Zu', $labels['close'], 'flat override applies');
-		$this->assertSame('Weiter', $labels['next'], 'language override applies');
-		$this->assertSame('Vorheriges Bild', $labels['prev'], 'other language override is ignored');
 	}
 
 	public function testUnknownLanguageFallsBackToEnglish(): void

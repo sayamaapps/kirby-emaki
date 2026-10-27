@@ -32,11 +32,30 @@ class I18n
 	// Static on purpose: Viewer::prepare() sets both for each request, and a PHP request starts with the defaults.
 	private static string $language = 'en';
 
+	/** @var array<string,string> */
+	private static array $overrides = [];
+
 	/** @var array<string, array<string,string>> */
 	private static array $tables = [];
 
-	/** @var array<string,string> */
-	private static array $overrides = [];
+	/**
+	 * The labels the script needs to build the dialog, for the data
+	 * attributes of the <script> tag (Viewer::tags()). Keys are the attribute
+	 * names without the `data-` prefix. Placeholders such as `{n}` stay in
+	 * the text: the script fills them.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function labels(): array
+	{
+		return [
+			'dialog'  => self::t('dialog'),
+			'close'   => self::t('button.close'),
+			'prev'    => self::t('button.prev'),
+			'next'    => self::t('button.next'),
+			'counter' => self::t('counter'),
+		];
+	}
 
 	/**
 	 * The current language of the labels.
@@ -74,6 +93,21 @@ class I18n
 	}
 
 	/**
+	 * One label with its `{name}` placeholders replaced by the given values, unescaped.
+	 * The order: the `texts` override, the current language, English, the key itself.
+	 *
+	 * @param array<string,mixed> $values
+	 */
+	public static function t(string $key, array $values = []): string
+	{
+		$text = self::$overrides[$key] ?? self::table(self::$language)[$key] ?? self::table('en')[$key] ?? $key;
+		foreach ($values as $name => $value) {
+			$text = str_replace('{' . $name . '}', (string)$value, $text);
+		}
+		return $text;
+	}
+
+	/**
 	 * The text table of one language. Unknown languages give an empty table.
 	 *
 	 * @return array<string,string>
@@ -84,39 +118,5 @@ class I18n
 			return [];
 		}
 		return self::$tables[$language] ??= require dirname(__DIR__) . '/translations/' . $language . '.php';
-	}
-
-	/**
-	 * One label with its `{name}` placeholders replaced by the given values, unescaped.
-	 * The order: the `texts` override, the current language, English, the key itself.
-	 *
-	 * @param array<string,mixed> $values
-	 */
-	public static function t(string $key, array $values = []): string
-	{
-		$text = self::$overrides[$key] ?? self::table(self::$language)[$key] ?? self::table('en')[$key] ?? $key;
-		foreach ($values as $name => $value) {
-			$text = str_replace('{' . $name . '}', (string) $value, $text);
-		}
-		return $text;
-	}
-
-	/**
-	 * The labels the script needs to build the dialog, for the data
-	 * attributes of the <script> tag (Viewer::tags()). Keys are the attribute
-	 * names without the `data-` prefix. Placeholders such as `{n}` stay in
-	 * the text: the script fills them.
-	 *
-	 * @return array<string,string>
-	 */
-	public static function labels(): array
-	{
-		return [
-			'dialog'  => self::t('dialog'),
-			'close'   => self::t('button.close'),
-			'prev'    => self::t('button.prev'),
-			'next'    => self::t('button.next'),
-			'counter' => self::t('counter'),
-		];
 	}
 }

@@ -22,25 +22,25 @@ use Kirby\Cms\App;
  */
 class Options
 {
-	/** Option prefix of the plugin. */
-	public const PREFIX = 'emaki.';
-
 	/** Widths for the large view when no `thumbs.srcsets` preset is configured; never above the file's width. */
 	public const LARGE_WIDTHS = [800, 1200, 1800, 2400];
 
+	/** Option prefix of the plugin. */
+	public const PREFIX = 'emaki.';
+
 	/** Widths for the tile when no preset is configured; never above the file's width. */
 	public const TILE_WIDTHS = [320, 480, 720, 960];
-
-	/** Reads `emaki.<key>`. `null` counts as not set and gives the default. */
-	public static function get(App $kirby, string $key, mixed $default = null): mixed
-	{
-		return $kirby->option(self::PREFIX . $key) ?? $default;
-	}
 
 	/** Master switch. Only `true` switches on. */
 	public static function active(App $kirby): bool
 	{
 		return self::get($kirby, 'active', false) === true;
+	}
+
+	/** Reads `emaki.<key>`. `null` counts as not set and gives the default. */
+	public static function get(App $kirby, string $key, mixed $default = null): mixed
+	{
+		return $kirby->option(self::PREFIX . $key) ?? $default;
 	}
 
 	/**

@@ -11,6 +11,20 @@ use Sayamaapps\Emaki\Options;
 #[CoversClass(Options::class)]
 final class OptionsTest extends PluginTestCase
 {
+	public function testFlatSpellingSwitchesEmakiOn(): void
+	{
+		$kirby = new App(['options' => ['emaki.active' => true]]);
+
+		$this->assertTrue(Options::active($kirby), 'emaki.active is read');
+	}
+
+	public function testLanguageOptionWins(): void
+	{
+		$kirby = new App(['options' => ['emaki.language' => 'de']]);
+
+		$this->assertSame('de', Options::language($kirby), 'emaki.language is the first choice');
+	}
+
 	public function testNestedSpellingReadsOtherKeys(): void
 	{
 		$kirby = new App(['options' => ['emaki' => ['sizes' => '50vw']]]);
@@ -24,20 +38,6 @@ final class OptionsTest extends PluginTestCase
 		$kirby = new App(['options' => ['emaki' => ['active' => true]]]);
 
 		$this->assertTrue(Options::active($kirby), 'nested emaki.active is read');
-	}
-
-	public function testFlatSpellingSwitchesEmakiOn(): void
-	{
-		$kirby = new App(['options' => ['emaki.active' => true]]);
-
-		$this->assertTrue(Options::active($kirby), 'emaki.active is read');
-	}
-
-	public function testOnlyTrueSwitchesEmakiOn(): void
-	{
-		$kirby = new App(['options' => ['emaki.active' => 'yes']]);
-
-		$this->assertFalse(Options::active($kirby), 'a value other than true does not switch on');
 	}
 
 	public function testNotSetFallsBackToTheDefault(): void
@@ -55,11 +55,11 @@ final class OptionsTest extends PluginTestCase
 		$this->assertSame('100vw', Options::get($kirby, 'sizes', '100vw'), 'null gives the default');
 	}
 
-	public function testLanguageOptionWins(): void
+	public function testOnlyTrueSwitchesEmakiOn(): void
 	{
-		$kirby = new App(['options' => ['emaki.language' => 'de']]);
+		$kirby = new App(['options' => ['emaki.active' => 'yes']]);
 
-		$this->assertSame('de', Options::language($kirby), 'emaki.language is the first choice');
+		$this->assertFalse(Options::active($kirby), 'a value other than true does not switch on');
 	}
 
 	public function testReadingReportsNoDeprecation(): void
