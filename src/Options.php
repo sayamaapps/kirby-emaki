@@ -4,6 +4,7 @@ namespace Sayamaapps\Emaki;
 
 use Kirby\Cms\App;
 use Kirby\Cms\Helpers;
+use WeakMap;
 
 /**
  * Reads Emaki's options: `sayamaapps.emaki.<key>`, falling back to the older
@@ -38,6 +39,13 @@ class Options
 	public const TILE_WIDTHS = [320, 480, 720, 960];
 
 	/**
+	 * Old names already reported, per app: one deprecation per name, not one per read.
+	 *
+	 * @var WeakMap<App, array<string,true>>|null
+	 */
+	private static WeakMap|null $reported = null;
+
+	/**
 	 * Master switch. Only `true` switches on.
 	 */
 	public static function active(App $kirby): bool
@@ -59,10 +67,7 @@ class Options
 		// The older spelling still works, with a deprecation (README, Deprecations).
 		$legacy = $kirby->option(self::PREFIX . $key);
 		if ($legacy !== null) {
-			Helpers::deprecated(
-				'Emaki: emaki.' . $key . ' is deprecated, use ' . self::OPTION_PREFIX . $key,
-				'option-prefix'
-			);
+			self::reportOnce($kirby, $key);
 		}
 
 		return $legacy ?? $default;
@@ -113,5 +118,28 @@ class Options
 		$nested = $kirby->options()['sayamaapps']['emaki'] ?? null;
 
 		return is_array($nested) ? ($nested[$key] ?? null) : null;
+	}
+
+	/**
+	 * Reports the older spelling of one key once per app.
+	 */
+	private static function reportOnce(App $kirby, string $key): void
+	{
+		if (self::$reported === null) {
+			/** @var WeakMap<App, array<string,true>> $map */
+			$map = new WeakMap();
+			self::$reported = $map;
+		}
+		$seen = self::$reported[$kirby] ?? [];
+		if (isset($seen[$key])) {
+			return;
+		}
+		$seen[$key] = true;
+		self::$reported[$kirby] = $seen;
+
+		Helpers::deprecated(
+			'Emaki: emaki.' . $key . ' is deprecated, use ' . self::OPTION_PREFIX . $key,
+			'option-prefix'
+		);
 	}
 }

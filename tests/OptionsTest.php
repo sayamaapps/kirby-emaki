@@ -104,6 +104,28 @@ final class OptionsTest extends PluginTestCase
 		$this->assertSame(['Emaki: emaki.active is deprecated, use sayamaapps.emaki.active'], $deprecations);
 	}
 
+	public function testOldSpellingIsReportedOncePerApp(): void
+	{
+		$deprecations = [];
+		set_error_handler(
+			function (int $level, string $message) use (&$deprecations): bool {
+				$deprecations[] = $message;
+				return true;
+			},
+			E_USER_DEPRECATED
+		);
+
+		try {
+			$kirby = new App(['options' => ['debug' => true, 'emaki.active' => true]]);
+			Options::active($kirby);
+			Options::active($kirby);
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertCount(1, $deprecations, 'the second read of the same old name is not reported again');
+	}
+
 	public function testOldSpellingStillWorks(): void
 	{
 		$kirby = new App(['options' => ['emaki.active' => true]]);
