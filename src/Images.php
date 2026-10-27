@@ -42,7 +42,7 @@ class Images
 	 */
 	public static function attributes(File $file, array $options = []): array|null
 	{
-		$kirby = $file->kirby();
+		$kirby = App::instance();
 		$sizes = $options['sizes'] ?? null;
 		$sizes = is_string($sizes) ? $sizes : self::TILE_SIZES;
 		$alt   = $file->alt()->value();
