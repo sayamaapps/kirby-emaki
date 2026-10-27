@@ -33,9 +33,10 @@ class I18n
 	/** Languages Emaki ships. English is the default and the fallback. */
 	public const LANGUAGES = ['en', 'de'];
 
+	// Static on purpose: Viewer::prepare() sets both for each request, and a PHP request starts with the defaults.
 	private static string $language = 'en';
 
-	/** @var array<string,string> */
+	/** @var array<string,string> Labels from the `texts` option. */
 	private static array $overrides = [];
 
 	/**
