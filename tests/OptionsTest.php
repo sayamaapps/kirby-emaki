@@ -11,6 +11,28 @@ use Sayamaapps\Emaki\Options;
 #[CoversClass(Options::class)]
 final class OptionsTest extends PluginTestCase
 {
+	public function testNestedNewSpellingReadsOtherKeys(): void
+	{
+		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['sizes' => '50vw']]]]);
+
+		$this->assertSame('50vw', Options::get($kirby, 'sizes', '100vw'), 'nested value beats the default');
+		$this->assertSame('100vw', Options::get($kirby, 'format', '100vw'), 'unset nested key: the default');
+	}
+
+	public function testNestedNewSpellingSwitchesEmakiOn(): void
+	{
+		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['active' => true]]]]);
+
+		$this->assertTrue(Options::active($kirby), 'nested sayamaapps.emaki.active is read');
+	}
+
+	public function testNestedNewSpellingWinsOverOldFlatSpelling(): void
+	{
+		$kirby = new App(['options' => ['sayamaapps' => ['emaki' => ['active' => false]], 'emaki.active' => true]]);
+
+		$this->assertFalse(Options::active($kirby), 'nested sayamaapps.emaki.active wins');
+	}
+
 	public function testNewSpellingIsNotReported(): void
 	{
 		$deprecations = [];

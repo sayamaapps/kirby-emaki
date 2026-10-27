@@ -51,7 +51,7 @@ class Options
 	 */
 	public static function get(App $kirby, string $key, mixed $default = null): mixed
 	{
-		$value = $kirby->option(self::OPTION_PREFIX . $key);
+		$value = self::newSpelling($kirby, $key);
 		if ($value !== null) {
 			return $value;
 		}
@@ -95,5 +95,23 @@ class Options
 			}
 		}
 		return 'en';
+	}
+
+	/**
+	 * Reads `sayamaapps.emaki.<key>`, flat or nested. The defaults of the plugin
+	 * sit under the key `sayamaapps.emaki` (config/options.php), and Kirby's
+	 * option() answers a nested value from there, so a nested value is read from
+	 * the raw options.
+	 */
+	private static function newSpelling(App $kirby, string $key): mixed
+	{
+		$value = $kirby->option(self::OPTION_PREFIX . $key);
+		if ($value !== null) {
+			return $value;
+		}
+
+		$nested = $kirby->options()['sayamaapps']['emaki'] ?? null;
+
+		return is_array($nested) ? ($nested[$key] ?? null) : null;
 	}
 }
