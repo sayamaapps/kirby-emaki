@@ -165,7 +165,7 @@ A site that needs its own markup creates `site/snippets/emaki/gallery.php`; Kirb
 
 ## Deprecations
 
-Nothing is removed before the next major version. Both forms below work now and report a deprecation in Kirby's debug mode.
+Nothing is removed before the next major version. The old names below keep working. Options, functions, `I18n::t()` and `I18n::table()` report a deprecation in Kirby's debug mode; translation keys and class names do not.
 
 | Older name | Use instead |
 |---|---|
