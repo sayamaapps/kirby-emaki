@@ -9,6 +9,13 @@ All notable changes to this project are documented here. Versions follow
   and CSS.
 - **A change to the CSS tokens** (`--emaki-*`) is listed under "Tokens".
 
+## [1.2.0] — 2026-10-31
+
+### Changed
+
+- Options are read as `sayamaapps.emaki.<name>`. The 1.x names `emaki.<name>` keep working and are read without a warning. If both are set, the new one wins.
+- `Options::OPTION_PREFIX` is new. `Options::PREFIX` keeps its 1.x value.
+
 ## [1.1.0] — 2026-10-27
 
 ### Added

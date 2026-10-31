@@ -256,6 +256,14 @@ final class KirbyTest extends PluginTestCase
 		expect([800, 1200, 1800, 2400], self::srcsetWidths(Images::attributes($this->file($kirby, 'wide.jpg'))['data-srcset']), 'missing preset: the fallback list');
 	}
 
+	public function testNewSpellingSwitchesOnTheViewer(): void
+	{
+		$this->app(['sayamaapps.emaki.active' => true, 'sayamaapps.emaki.style' => false]);
+		$tags = snippet('emaki', [], true);
+		holds(str_contains($tags, '<script'), 'sayamaapps.emaki.active: the script tag is printed');
+		holds(!str_contains($tags, '<link'), 'sayamaapps.emaki.style false: no stylesheet tag');
+	}
+
 	public function testNoInlineStyleOrScriptInOutput(): void
 	{
 		$kirby   = $this->app(['emaki.active' => true]);
