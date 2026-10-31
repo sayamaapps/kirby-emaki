@@ -40,7 +40,7 @@ class Viewer
 	 * first call prints them, later ones print nothing. Both external and the
 	 * script deferred, so a Content Security Policy needs no 'unsafe-inline'.
 	 * The labels the script needs travel as data attributes of the script tag.
-	 * `'emaki.style' => false` / `'emaki.script' => false`
+	 * `'sayamaapps.emaki.style' => false` / `'sayamaapps.emaki.script' => false`
 	 * leave out the tag for sites that bundle the file themselves. Emaki off:
 	 * nothing at all.
 	 */

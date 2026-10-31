@@ -5,14 +5,21 @@ namespace Sayamaapps\Emaki;
 use Kirby\Cms\App;
 
 /**
- * Reads Emaki's options: `emaki.<key>`.
+ * Reads Emaki's options: `sayamaapps.emaki.<key>`, falling back to the 1.x name
+ * `emaki.<key>`.
+ *
+ * The flat form (`'sayamaapps.emaki.active' => true`) is the one to use. The
+ * nested form (`'emaki' => ['active' => true]`) works for the 1.x prefix only:
+ * Kirby resolves `sayamaapps.emaki.*` through the plugin's own options block
+ * first, which shadows a nested `sayamaapps` array.
  *
  * `null` counts as "not set", like Kirby's own option(), so
- * `'emaki.format' => null` falls back to the default. Both spellings work,
- * flat (`'emaki.active' => true`) and nested (`'emaki' => ['active' => true]`).
+ * `'sayamaapps.emaki.format' => null` falls back to the default.
  *
  * Defaults are passed at each call, NOT in an 'options' block of the plugin
- * (Kirby would file them under the plugin's own name otherwise).
+ * (Kirby would file them under the plugin's own name otherwise). The `options`
+ * block in config/options.php lists the keys with null: a default there would
+ * hide the 1.x spelling.
  *
  * @package   Kirby Emaki
  * @author    Simon Räder
@@ -25,7 +32,14 @@ class Options
 	/** Widths for the large view when no `thumbs.srcsets` preset is configured; never above the file's width. */
 	public const LARGE_WIDTHS = [800, 1200, 1800, 2400];
 
-	/** Option prefix of the plugin. */
+	/** Option prefix since 1.2. */
+	public const OPTION_PREFIX = 'sayamaapps.emaki.';
+
+	/**
+	 * Option prefix of 1.x (`emaki.<key>`). Still read as a fallback until 2.0.
+	 *
+	 * @deprecated 1.2 use OPTION_PREFIX; removal planned for 2.0
+	 */
 	public const PREFIX = 'emaki.';
 
 	/** Widths for the tile when no preset is configured; never above the file's width. */
@@ -37,14 +51,23 @@ class Options
 		return self::get($kirby, 'active', false) === true;
 	}
 
-	/** Reads `emaki.<key>`. `null` counts as not set and gives the default. */
+	/**
+	 * Reads an option under the sayamaapps.emaki.* spelling, then under the
+	 * 1.x emaki.* spelling, which is read silently (README, Deprecated and planned
+	 * for 2.0). Returns $default when neither is set.
+	 */
 	public static function get(App $kirby, string $key, mixed $default = null): mixed
 	{
+		$value = $kirby->option(self::OPTION_PREFIX . $key);
+		if ($value !== null) {
+			return $value;
+		}
+
 		return $kirby->option(self::PREFIX . $key) ?? $default;
 	}
 
 	/**
-	 * Language of the labels: `emaki.language`, otherwise the language of the
+	 * Language of the labels: `sayamaapps.emaki.language`, otherwise the language of the
 	 * current request (multi-language sites), the default language, the first
 	 * two letters of Kirby's `locale` option, English. Only languages Emaki
 	 * ships (I18n::LANGUAGES) are returned.

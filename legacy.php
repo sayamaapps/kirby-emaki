@@ -15,7 +15,7 @@ class_alias(\Sayamaapps\Emaki\Presets::class, 'Emaki\\Presets');
 
 if (Kirby\Cms\Helpers::hasOverride('emaki_option') === false) {
 	/**
-	 * Reads `emaki.<key>`.
+	 * Reads `sayamaapps.emaki.<key>`, falling back to `emaki.<key>`.
 	 *
 	 * @deprecated Use Sayamaapps\Emaki\Options::get().
 	 */

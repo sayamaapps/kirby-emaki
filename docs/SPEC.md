@@ -1,4 +1,4 @@
-> **Names:** classes `Sayamaapps\Emaki\*` (the 1.x names `Emaki\*` are aliases), options `emaki.*` (the names of 1.x, read unchanged), functions `emaki_*` are wrappers in `legacy.php`. The list below gives the names of 1.x.
+> **Names:** classes `Sayamaapps\Emaki\*` (the 1.x names `Emaki\*` are aliases), options `sayamaapps.emaki.*` (the 1.x names `emaki.*` are still read as a fallback), functions `emaki_*` are wrappers in `legacy.php`. The list below gives the names of 1.x.
 
 # Emaki — specification v1
 
@@ -34,7 +34,7 @@ while coding.
    documented nor promised and may change.
 7. **Language.** Public interface, README, code and comments in English. Labels
    translatable, English first, German shipped (§6).
-8. **Off by default** (`emaki.active`), like every sayamaapps module. Off:
+8. **Off by default** (`sayamaapps.emaki.active`), like every sayamaapps module. Off:
    `emaki` snippet prints nothing, `emaki/gallery` renders the same markup
    without `data-emaki` (plain links to the large image), `$file->emaki()`
    still works (plain data).
@@ -46,7 +46,7 @@ while coding.
 
 ## 2. PHP API (index.php)
 
-### 2.1 Options (prefix `emaki.`, flat or nested; `null` = not set)
+### 2.1 Options (prefix `sayamaapps.emaki.`, flat; 1.x `emaki.` as fallback; `null` = not set)
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -156,7 +156,7 @@ Renders:
 </div>
 ```
 
-`data-emaki` only while `emaki.active` is true. Attribute values go through
+`data-emaki` only while `sayamaapps.emaki.active` is true. Attribute values go through
 `esc()`. Empty `$files` renders nothing. An image without thumbs (§2.3 returns
 null) is left out: its place is `<!-- emaki: no thumbs for <filename> -->`, with
 no link and no image. The container is printed only when at least one tile
@@ -253,7 +253,7 @@ the image box. ≈ 4 kB. No `@import`, no `url(http…)`.
 
 `dialog` "Image {n} of {count}", `counter` "{n} / {count}", `button.close`,
 `button.prev`, `button.next`. Also registered as Kirby translations
-`emaki.<key>`. Overrides via `emaki.texts`.
+`emaki.<key>`. Overrides via `sayamaapps.emaki.texts`.
 
 ## 7. Files and owners
 
@@ -278,7 +278,7 @@ and ends in the largest width, `data-srcset` widths, `src` ≥ 720 rule,
 oriented width/height, SVG passthrough, no upscaling for a 300 px file,
 `emaki/gallery` markup of §3.2 with and without `active`, `$attrs` filter,
 `caption` modes, `esc()` of a hostile alt, `emaki` snippet prints both tags
-once and nothing when off, `emaki.texts` reaches the script tag, no inline
+once and nothing when off, `sayamaapps.emaki.texts` reaches the script tag, no inline
 style/script in any output (regex check of the output), the original's
 SHA-256 unchanged). Acceptance: `composer test` green on PHP 8.2–8.4.
 

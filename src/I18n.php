@@ -10,10 +10,10 @@ namespace Sayamaapps\Emaki;
  * reads its own tables: a missing Kirby translation must never silently turn a
  * German label English.
  *
- * `emaki.texts` replaces single strings, per language or for all:
+ * `sayamaapps.emaki.texts` replaces single strings, per language or for all:
  *
- *   'emaki.texts' => ['de' => ['button.close' => 'Zumachen']]
- *   'emaki.texts' => ['button.close' => 'Close']
+ *   'sayamaapps.emaki.texts' => ['de' => ['button.close' => 'Zumachen']]
+ *   'sayamaapps.emaki.texts' => ['button.close' => 'Close']
  *
  * The language is set once per request (Viewer::prepare(), Options::language())
  * and defaults to English. Missing keys fall back to English, then to the key.
@@ -74,7 +74,7 @@ class I18n
 	}
 
 	/**
-	 * Strings from `emaki.texts` for the current language; flat keys apply to every language.
+	 * Strings from `sayamaapps.emaki.texts` for the current language; flat keys apply to every language.
 	 */
 	public static function setOverrides(mixed $texts): void
 	{
