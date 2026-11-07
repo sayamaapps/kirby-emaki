@@ -13,7 +13,8 @@ Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after a
 - Accessible: named dialog, polite counter, captions linked to the dialog, focus returned on close.
 - Tiles and large views from Kirby's thumb presets; your originals are never written to.
 - `emaki:open` event for your own counting; Emaki sends nothing itself.
-- Reduced-motion aware, English and German labels, no cookies or browser storage.
+- The picture zooms out of its tile and back, with a soft shadow; reduced motion is respected.
+- English and German labels, no cookies or browser storage.
 
 ## Requirements
 
@@ -108,8 +109,13 @@ Set the colour tokens on `:root`, or on any ancestor of the dialog:
 | `--emaki-bg` | `rgb(12 16 20 / 0.88)` | Backdrop behind the image. |
 | `--emaki-fg` | `#f4f5f3` | Text and button symbols. |
 | `--emaki-accent` | `#ffffff` | Focus ring of the buttons and the counter. |
+| `--emaki-shadow` | `0 2px 12px rgb(0 0 0 / 0.5)` | Shadow under the picture; `none` switches it off. |
 
-Emaki styles `.emaki` (the dialog) and its parts: `.emaki-stage`, `.emaki-image`, `.emaki-caption`, `.emaki-counter`, `.emaki-close`, `.emaki-prev` and `.emaki-next`. States: `.emaki--motion` (animation, only without reduced motion) and `.is-loading` (while an image loads).
+Emaki styles `.emaki` (the dialog) and its parts: `.emaki-stage`, `.emaki-image`, `.emaki-zoom` (the tile's picture while it moves onto the stage), `.emaki-caption`, `.emaki-counter`, `.emaki-close`, `.emaki-prev` and `.emaki-next`. States: `.emaki--motion` (animation, only without reduced motion), `.is-loading` (while an image loads) and `.is-zooming` (while the tile's picture is on its way).
+
+### Motion
+
+Unless the visitor prefers reduced motion, the picture zooms out of the clicked tile when the viewer opens (0.28 s) and moves back into it when the viewer closes, while the backdrop fades. Until the large picture has loaded, the tile's own picture stands in, so the zoom never runs on an empty area. If the tile has scrolled out of view, the viewer only fades out. Stepping to the previous or next image moves nothing. The motion runs through the Web Animations API and sets no inline styles, so a Content Security Policy with `style-src 'self'` needs no change. Without the API, or with reduced motion, the viewer opens and closes without any motion.
 
 ## Options
 

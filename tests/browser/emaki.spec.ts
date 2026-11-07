@@ -39,6 +39,28 @@ async function openUnfocused(page: Page, container = 0, item = 0) {
   await expect(dialog(page)).not.toHaveClass(/is-loading/);
 }
 
+// Records every Element.animate() call of the page: which element (by class),
+// which properties, and the src it carried at that moment. Must be installed
+// before the page loads.
+type Recorded = { className: string; properties: string[]; src: string | null };
+async function recordAnimations(page: Page) {
+  await page.addInitScript(() => {
+    (window as any).emakiAnimations = [];
+    const original = Element.prototype.animate;
+    Element.prototype.animate = function (keyframes: any, options: any) {
+      const frame = Array.isArray(keyframes) ? keyframes[0] : keyframes;
+      (window as any).emakiAnimations.push({
+        className: this.className,
+        properties: Object.keys(frame),
+        src: this.getAttribute('src'),
+      });
+      return original.call(this, keyframes, options);
+    };
+  });
+}
+const animations = (page: Page): Promise<Recorded[]> => page.evaluate(() => (window as any).emakiAnimations);
+const zoomCopy = (page: Page) => dialog(page).locator('img.emaki-zoom');
+
 // Accessible name, counter and source of the image on show.
 async function expectShown(page: Page, number: number, src: string, total = 3) {
   await expect(dialog(page)).toHaveAccessibleName(`Bild ${number} von ${total}`);
@@ -247,11 +269,77 @@ for (const viewport of [
       expect(findings.join('\n\n')).toBe('');
     });
 
-    test('no element has a style attribute, dialog open or not', async ({ page }) => {
+    test('no element has a style attribute: before, while open, during the zoom, after closing', async ({ page }) => {
       await page.goto(PAGE);
       expect(await page.locator('[style]').count()).toBe(0);
-      await open(page, 0, 0);
+      await page.goto(PAGE);
+      await trigger(page, 0, 0).click();
+      // Right after the click the zoom copy is on its way (not yet settled).
       expect(await page.locator('[style]').count()).toBe(0);
+      await expect(dialog(page)).not.toHaveClass(/is-loading/);
+      await expect(zoomCopy(page)).toHaveAttribute('hidden');
+      expect(await page.locator('[style]').count()).toBe(0);
+      await page.keyboard.press('Escape');
+      await expect(dialog(page)).not.toBeVisible();
+      expect(await page.locator('[style]').count()).toBe(0);
+    });
+
+    test('opening zooms the tile picture out of its tile, then hands over to the large picture', async ({ page }) => {
+      await recordAnimations(page);
+      await page.goto(PAGE);
+      const tile = trigger(page, 0, 1).locator('img');
+      await expect(tile).toHaveJSProperty('complete', true);
+      await trigger(page, 0, 1).click();
+      await expect(dialog(page)).toBeVisible();
+      // The copy carried the tile's own picture and moved (transform), not the large picture.
+      await expect.poll(() => animations(page)).toContainEqual({ className: 'emaki-zoom', properties: ['transform'], src: expect.stringMatching(/\/img\/eingang\.jpg$/) });
+      // Once the large picture has loaded and the zoom has ended, the copy is gone and the picture is there.
+      await expect(zoomCopy(page)).toHaveAttribute('hidden', '', { timeout: 5_000 });
+      await expect(zoomCopy(page)).toBeHidden();
+      await expect(zoomCopy(page)).not.toHaveAttribute('src');
+      await expect(dialog(page)).not.toHaveClass(/is-zooming|is-loading/);
+      await expectShown(page, 2, 'img/eingang.jpg');
+      await expect(image(page)).toBeVisible();
+      // Stepping moves nothing: no further animation, the copy stays hidden.
+      const before = (await animations(page)).length;
+      await page.keyboard.press('ArrowRight');
+      await expectShown(page, 3, 'img/garten.jpg');
+      await expect(dialog(page)).not.toHaveClass(/is-loading/);
+      expect((await animations(page)).length).toBe(before);
+      await expect(zoomCopy(page)).toHaveAttribute('hidden', '');
+    });
+
+    test('closing moves the picture back into its tile while the tile is in the viewport, and returns focus', async ({ page }) => {
+      await recordAnimations(page);
+      await open(page, 0, 1);
+      await expect(zoomCopy(page)).toHaveAttribute('hidden', '', { timeout: 5_000 });
+      await page.keyboard.press('ArrowRight');
+      await expectShown(page, 3, 'img/garten.jpg');
+      await expect(dialog(page)).not.toHaveClass(/is-loading/);
+      const before = (await animations(page)).length;
+      await page.keyboard.press('Escape');
+      await expect(dialog(page)).not.toBeVisible();
+      const closing = (await animations(page)).slice(before).map((a) => [a.className, a.properties.join()]);
+      expect(closing).toEqual(expect.arrayContaining([
+        ['emaki-image', 'transform'],
+        [expect.stringMatching(/^emaki emaki--motion\b/), 'opacity'],
+      ]));
+      await expect(trigger(page, 0, 1)).toBeFocused();
+      await expect(image(page)).not.toHaveAttribute('src');
+    });
+
+    test('closing only fades when the tile has left the viewport', async ({ page }) => {
+      await recordAnimations(page);
+      await open(page, 0, 0);
+      await expect(zoomCopy(page)).toHaveAttribute('hidden', '', { timeout: 5_000 });
+      // The page behind the dialog scrolls to its end: the first tile is out of view.
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      expect(await trigger(page, 0, 0).locator('img').evaluate((img) => img.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0);
+      const before = (await animations(page)).length;
+      await dialog(page).getByRole('button', { name: 'Schließen' }).click();
+      await expect(dialog(page)).not.toBeVisible();
+      const closing = (await animations(page)).slice(before);
+      expect(closing.map((a) => [a.className, a.properties.join()])).toEqual([['emaki emaki--motion', 'opacity']]);
     });
   });
 }
@@ -281,5 +369,27 @@ test.describe('independent of viewport', () => {
     await page.goto(PAGE);
     await expect(dialog(page)).toHaveCount(1);
     await expect(dialog(page)).not.toHaveClass(/emaki--motion/);
+  });
+
+  test('with reduced motion nothing zooms: no animation on opening or closing, the copy stays hidden', async ({ page }) => {
+    await recordAnimations(page);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page, 0, 1);
+    await expect(zoomCopy(page)).toHaveAttribute('hidden', '');
+    await expect(zoomCopy(page)).not.toHaveAttribute('src');
+    await page.keyboard.press('Escape');
+    await expect(dialog(page)).not.toBeVisible();
+    expect(await animations(page)).toEqual([]);
+    await expect(trigger(page, 0, 1)).toBeFocused();
+  });
+
+  test('the picture carries the shadow token; --emaki-shadow: none switches it off', async ({ page }) => {
+    await open(page, 0, 0);
+    const shadow = () => image(page).evaluate((img) => getComputedStyle(img).boxShadow);
+    expect(await shadow()).toMatch(/^rgba\(0, 0, 0, 0\.5\) 0px 2px 12px 0px$/);
+    await page.addStyleTag({ content: ':root { --emaki-shadow: none; }' });
+    expect(await shadow()).toBe('none');
+    await page.addStyleTag({ content: ':root { --emaki-shadow: 0 0 8px rgb(255 0 0 / 0.6); }' });
+    expect(await shadow()).toBe('rgba(255, 0, 0, 0.6) 0px 0px 8px 0px');
   });
 });
