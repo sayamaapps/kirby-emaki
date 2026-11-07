@@ -9,6 +9,20 @@ All notable changes to this project are documented here. Versions follow
   and CSS.
 - **A change to the CSS tokens** (`--emaki-*`) is listed under "Tokens".
 
+## [1.3.0] — unreleased
+
+### Added
+
+- **Zoom.** Unless the visitor prefers reduced motion, the picture zooms out of the clicked tile when the viewer opens and back into it when it closes (0.28 s, Web Animations API, no inline styles). The tile's own picture stands in until the large one has loaded. A tile that has scrolled out of view gets a fade only; stepping moves nothing. Escape, the close button, a click beside the picture, the focus return, the counter and `emaki:open` behave as before.
+
+### Tokens
+
+- **`--emaki-shadow`** (default `0 2px 12px rgb(0 0 0 / 0.5)`): a soft shadow under the picture. `none` switches it off.
+
+### Markup
+
+- **`.emaki-zoom`** is a new `<img>` in `.emaki-stage`, hidden except while the tile's picture moves onto the stage. **`.is-zooming`** is a new state of the dialog for that time. The opening keyframes fade the dialog in and no longer scale it.
+
 ## [1.2.0] — 2026-10-31
 
 ### Changed
@@ -72,5 +86,5 @@ markup links: the image that is opened and its two neighbours, which are fetched
 in advance. An image that a page links from a foreign host is loaded from that
 host when it is opened or fetched in advance.
 
-Planned for 1.1: a deep link (`#emaki=3`) that opens on load and closes with
-the back button. Zoom is not planned.
+Planned for a later version: a deep link (`#emaki=3`) that opens on load and
+closes with the back button.

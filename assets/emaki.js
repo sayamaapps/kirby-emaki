@@ -15,6 +15,11 @@
  * Each image shown fires `emaki:open` on the link that holds it (bubbles):
  * detail { href, image, index, count }. Nothing else leaves the page; what
  * the site does with the event is the site's business.
+ *
+ * Motion (only without `prefers-reduced-motion`): the picture zooms out of
+ * the clicked tile when the dialog opens and back into it when it closes,
+ * through the Web Animations API. No inline style is ever set: the page's
+ * Content Security Policy may forbid them.
  */
 (() => {
   'use strict';
@@ -58,6 +63,7 @@
   if (!reduced) dialog.classList.add('emaki--motion');
   const figure = make('figure', 'emaki-stage');
   const img = make('img', 'emaki-image', { alt: '' });
+  const zoom = make('img', 'emaki-zoom', { alt: '', 'aria-hidden': 'true', hidden: '' });
   const caption = make('figcaption', 'emaki-caption', { id: 'emaki-caption' });
   const close = make('button', 'emaki-close', { type: 'button', 'aria-label': words.close });
   const prev = make('button', 'emaki-prev', { type: 'button', 'data-step': '-1', 'aria-label': words.prev });
@@ -67,17 +73,111 @@
   prev.textContent = '‹';
   next.textContent = '›';
   figure.appendChild(img);
+  figure.appendChild(zoom);
   figure.appendChild(caption);
   [figure, close, prev, next, counter].forEach((node) => dialog.appendChild(node));
   document.body.appendChild(dialog);
 
-  const loaded = () => dialog.classList.remove('is-loading');
-  img.addEventListener('load', loaded);
-  img.addEventListener('error', loaded);
-
   let seq = [];       // the sequence on show
   let index = 0;      // position in seq, 0-based
   let origin = null;  // the link that opened the dialog
+
+  // --- Motion -------------------------------------------------------------
+  // The zoom needs the Web Animations API; without it (or with reduced
+  // motion) the dialog opens and closes as it always did.
+  const motion = !reduced && typeof dialog.animate === 'function';
+  const EASE = 'cubic-bezier(.2,.8,.2,1)';
+  const ZOOM = 280;   // ms, the picture's way between tile and stage
+  const FADE = 180;   // ms, the backdrop
+  let entering = null; // the running opening animation of the zoom copy
+  let leaving = false; // the closing animation runs; input is ignored
+
+  // The transform that moves a box of `to` onto the box `from` (top-left origin).
+  const towards = (from, to) => `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`;
+  const sized = (box) => box && box.width > 0 && box.height > 0;
+  const inViewport = (box) => box.bottom > 0 && box.right > 0
+    && box.top < (window.innerHeight || document.documentElement.clientHeight)
+    && box.left < (window.innerWidth || document.documentElement.clientWidth);
+  const tileOf = (link) => (link ? link.querySelector('img') : null);
+
+  // The zoom copy goes away at once when the picture changes or the dialog
+  // closes (dropZoom), or once the large picture has loaded and the zoom has
+  // ended (settle): then the large picture takes its place without a jump.
+  const dropZoom = () => {
+    if (entering) entering.cancel();
+    entering = null;
+    zoom.hidden = true;
+    zoom.removeAttribute('src');
+    dialog.classList.remove('is-zooming');
+  };
+  const settle = () => {
+    if (zoom.hidden) return;
+    if (entering && entering.playState !== 'finished') return;
+    if (dialog.classList.contains('is-loading')) return;
+    dropZoom();
+  };
+
+  const loaded = () => {
+    dialog.classList.remove('is-loading');
+    settle();
+  };
+  img.addEventListener('load', loaded);
+  img.addEventListener('error', loaded);
+
+  // Opening: the tile's own picture (its currentSrc, already decoded) is laid
+  // out on the stage and moved there from the tile's box, so the zoom never
+  // runs on an empty area. The large picture loads beneath it; the copy is
+  // dropped when both are done. Without a measurable tile: no zoom.
+  const zoomIn = (tile) => {
+    if (!motion || !tile || !tile.currentSrc) return;
+    const first = tile.getBoundingClientRect();
+    if (!sized(first)) return;
+    zoom.setAttribute('src', tile.currentSrc);
+    zoom.hidden = false;
+    dialog.classList.add('is-zooming');
+    const last = zoom.getBoundingClientRect();
+    if (!sized(last)) { dropZoom(); return; }
+    entering = zoom.animate(
+      [{ transform: towards(first, last) }, { transform: 'none' }],
+      { duration: ZOOM, easing: EASE, fill: 'both' },
+    );
+    entering.finished.then(settle, settle);
+  };
+
+  // Closing with motion: the backdrop fades, and the picture on show goes
+  // back into its tile when that is still in the viewport. The dialog closes
+  // after the animations, so `close` and the focus return happen as always.
+  const zoomOut = () => {
+    if (leaving) return true;
+    if (!motion || !dialog.open) return false;
+    leaving = true;
+    const runs = [];
+    const tile = tileOf(origin);
+    const target = tile ? tile.getBoundingClientRect() : null;
+    const shown = zoom.hidden ? img : zoom;
+    const from = shown.getBoundingClientRect();
+    const back = sized(target) && inViewport(target) && sized(from);
+    const duration = back ? ZOOM : FADE;
+    if (back) {
+      runs.push(shown.animate(
+        [{ transform: 'none' }, { transform: towards(target, from) }],
+        { duration, easing: EASE, fill: 'forwards' },
+      ));
+    }
+    runs.push(dialog.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: 'ease-out', fill: 'forwards' }));
+    const done = () => {
+      runs.forEach((run) => run.cancel());
+      leaving = false;
+      if (dialog.open) dialog.close();
+    };
+    Promise.all(runs.map((run) => run.finished)).then(done, done);
+    return true;
+  };
+
+  // Every way of closing goes through here.
+  const shut = () => {
+    if (!zoomOut()) dialog.close();
+  };
 
   // Show image i of the sequence.
   const show = (i) => {
@@ -89,6 +189,7 @@
     const own = link.getAttribute('data-emaki-caption');
     const legend = own !== null ? own : tileAlt; // an empty attribute wins: no caption
 
+    dropZoom();
     dialog.classList.add('is-loading');
     if (link.getAttribute('data-srcset') === null) img.removeAttribute('srcset');
     else img.setAttribute('srcset', link.getAttribute('data-srcset'));
@@ -121,6 +222,7 @@
   // Move within the sequence. It wraps around; a step that changes nothing
   // (a single image, Home on the first) shows and fires nothing.
   const go = (to) => {
+    if (leaving) return;
     const count = seq.length;
     const target = (to + count) % count;
     if (target !== index) show(target);
@@ -131,6 +233,7 @@
     origin = from;
     show(i);
     dialog.showModal();
+    zoomIn(tileOf(from));
   };
 
   sequences.forEach((links) => {
@@ -147,12 +250,21 @@
   [prev, next].forEach((button) => {
     button.addEventListener('click', () => go(index + Number(button.getAttribute('data-step'))));
   });
-  close.addEventListener('click', () => dialog.close());
+  close.addEventListener('click', shut);
 
   // The stage fills the dialog, so a click that lands on it is a click beside
   // the image: it closes, unless it hit the image, the caption or a button.
   dialog.addEventListener('click', (e) => {
-    if (!e.target.closest('.emaki-image, .emaki-caption, .emaki button')) dialog.close();
+    if (!e.target.closest('.emaki-image, .emaki-zoom, .emaki-caption, .emaki button')) shut();
+  });
+
+  // Escape: the browser asks first (`cancel`). With motion the closing is
+  // taken over, so the picture can go back to its tile; when the browser does
+  // not allow that (no user activation left), it closes at once, as before.
+  dialog.addEventListener('cancel', (e) => {
+    if (!motion || !e.cancelable) return;
+    e.preventDefault();
+    zoomOut();
   });
 
   dialog.addEventListener('keydown', (e) => {
@@ -185,6 +297,8 @@
   dialog.addEventListener('close', () => {
     const from = origin;
     origin = null;
+    leaving = false;
+    dropZoom();
     dialog.classList.remove('is-loading');
     img.removeAttribute('src');
     img.removeAttribute('srcset');
