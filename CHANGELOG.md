@@ -9,7 +9,7 @@ All notable changes to this project are documented here. Versions follow
   and CSS.
 - **A change to the CSS tokens** (`--emaki-*`) is listed under "Tokens".
 
-## [Unreleased]
+## [1.4.0] — 2026-11-27
 
 ### Added
 
