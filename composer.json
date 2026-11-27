@@ -1,6 +1,6 @@
 {
     "name": "sayamaapps/kirby-emaki",
-    "description": "Dependency-free image viewer and gallery helper for Kirby CMS 5.",
+    "description": "Dependency-free image viewer and gallery helper for Kirby CMS 5 and 6.",
     "license": "MIT",
     "type": "kirby-plugin",
     "keywords": [
@@ -31,7 +31,7 @@
     },
     "require-dev": {
         "ergebnis/composer-normalize": "2.54.0",
-        "getkirby/cms": "^5.0",
+        "getkirby/cms": "^5.0 || ^6.0",
         "icanhazstring/composer-unused": "0.9.7",
         "maglnet/composer-require-checker": "4.17.0",
         "phpmd/phpmd": "2.15.0",
@@ -52,7 +52,7 @@
     "extra": {
         "installer-name": "emaki",
         "kirby": {
-            "compatible": "^5.0"
+            "compatible": "^5.0 || ^6.0"
         },
         "kirby-cms-path": false
     },

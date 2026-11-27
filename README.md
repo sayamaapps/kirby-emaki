@@ -1,8 +1,8 @@
 # Emaki
 
-Image viewer for [Kirby CMS](https://getkirby.com) 5: a dependency-free lightbox with `srcset` gallery tiles.
+Image viewer for [Kirby CMS](https://getkirby.com) 5 and 6: a dependency-free lightbox with `srcset` gallery tiles.
 
-**Versions:** Kirby 5 · PHP 8.2 to 8.5 · MIT · [Changes](CHANGELOG.md)
+**Versions:** Kirby 5 and 6 · PHP 8.2 to 8.5 · MIT · [Changes](CHANGELOG.md)
 
 Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after another in a native `<dialog>`. Served from your own server, it uses no CDN, no inline code and no cookies. It styles only the viewer; the gallery grid is yours.
 
@@ -18,7 +18,7 @@ Emaki (絵巻, a Japanese picture scroll) shows the images of a page one after a
 
 ## Requirements
 
-- Kirby 5 (`getkirby/cms` 5.0 or newer)
+- Kirby 5 or 6 (`getkirby/cms` `^5.0 || ^6.0`); Kirby 6 needs PHP 8.3 or newer
 - PHP 8.2, 8.3, 8.4 or 8.5
 - A browser with the `<dialog>` element. Without it, links open the image.
 

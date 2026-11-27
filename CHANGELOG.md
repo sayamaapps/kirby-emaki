@@ -9,6 +9,13 @@ All notable changes to this project are documented here. Versions follow
   and CSS.
 - **A change to the CSS tokens** (`--emaki-*`) is listed under "Tokens".
 
+## [Unreleased]
+
+### Added
+
+- Kirby 6 is supported next to Kirby 5 (`getkirby/cms` `^5.0 || ^6.0`). Kirby 6 itself
+  needs PHP 8.3 or newer; the plugin still runs on PHP 8.2 with Kirby 5.
+
 ## [1.3.0] — 2026-11-07
 
 ### Added
